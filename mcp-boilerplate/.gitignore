@@ -1,0 +1,21 @@
+# macOS gitignore files
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two newline characters
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear in the Finder
+.Spotlight-V100
+.Trashes
+
+# Windows gitignore files
+
+Thumbs.db
+ehthumbs.db
+Desktop.ini
