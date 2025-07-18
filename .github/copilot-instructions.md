@@ -13,10 +13,10 @@ This project provides a collection of carefully crafted boilerplates with pre-de
 - **Modularity**: Instructions are organized into focused, reusable modules
 - **Best Practices**: Incorporates industry-standard patterns and proven approaches
 
-## Boilerplate Creation Standards
+## Boilerplate Standards
 
-**MUST** follow the comprehensive boilerplate creation standards defined in:
-- **[Boilerplate Creation Instructions](./instructions/boilerplate.instructions.md)**: Complete specification for creating new boilerplates
+**MUST** follow the comprehensive boilerplate standards to create a new or update existing boilerplates defined in:
+- **[Boilerplate Instructions](./instructions/boilerplate.instructions.md)**: Complete specification for creating new boilerplates
 
 ## Available Boilerplates
 
@@ -39,7 +39,9 @@ This project includes the following technology-specific boilerplates:
 ## Development Standards
 
 **ENSURE** all contributions follow these standards:
-- Use RFC 2119/8174 specification keywords (MUST, SHOULD, MAY, etc.)
+- Use RFC 2119/8174 specification keywords ("MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL"  etc.)
+    - https://www.rfc-editor.org/rfc/rfc2119.txt
+    - https://www.rfc-editor.org/rfc/rfc8174.txt
 - Follow standardized directory structures and file naming conventions
 - Include comprehensive AI-guided instructions and prompts
 - Provide practical code examples and implementation patterns

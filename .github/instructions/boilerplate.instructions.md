@@ -2,7 +2,7 @@
 applyTo: '**'
 ---
 
-# Boilerplate Creation Instructions
+# Boilerplate Instructions
 
 This document defines the **REQUIRED** standards for creating GitHub Copilot boilerplates within this project. All boilerplate contributions **MUST** follow these specifications to ensure consistency, quality, and AI-guided development effectiveness.
 
