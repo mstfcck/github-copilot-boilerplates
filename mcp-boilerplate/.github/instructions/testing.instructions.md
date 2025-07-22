@@ -1,23 +1,677 @@
 ---
 applyTo: '**'
 ---
+Testing instructions for FastMCP and FastAPI Model Context Protocol (MCP) applications.
 
-# MCP Testing Strategy Guide
+# Testing Instructions
 
-This document provides comprehensive testing guidelines for Model Context Protocol (MCP) applications following protocol specifications and industry best practices.
+This document provides comprehensive testing guidelines for Model Context Protocol (MCP) applications using FastMCP framework and FastAPI integration.
 
 ## Requirements
 
-### Critical Requirements (**MUST** Follow)
-- **MUST** test protocol compliance with official MCP specification
-- **REQUIRED** to implement unit tests for all components (resources, tools, prompts)
-- **SHALL** use official MCP test utilities and mock frameworks
-- **MUST** validate transport layer functionality (STDIO, HTTP/SSE)
-- **NEVER** skip integration testing with real protocol messages
+### Critical Testing Requirements (**MUST** Follow)
+- **MUST** use FastMCP in-memory testing for unit tests
+- **REQUIRED** to test all MCP tools, resources, and prompts
+- **SHALL** implement FastAPI TestClient for HTTP testing
+- **MUST** achieve minimum 90% code coverage
+- **NEVER** skip testing error handling and edge cases
 
-### Strong Recommendations (**SHOULD** Implement)
-- **SHOULD** implement comprehensive test coverage (minimum 80%)
-- **RECOMMENDED** to use property-based testing for protocol edge cases
+### Strong Testing Recommendations (**SHOULD** Implement)
+- **SHOULD** use pytest with async support for FastMCP testing
+- **RECOMMENDED** to implement integration tests with real FastMCP clients
+- **ALWAYS** test performance and load scenarios
+- **DO** use property-based testing for complex data transformations
+- **DON'T** rely solely on mocking for critical path testing
+
+### Optional Testing Enhancements (**MAY** Consider)
+- **MAY** implement end-to-end testing with FastAPI + FastMCP hybrid apps
+- **OPTIONAL** to use Docker containers for integration testing
+- **USE** FastAPI dependency overrides for testing isolation
+- **IMPLEMENT** automated performance benchmarking
+- **AVOID** testing implementation details over behavior
+
+## FastMCP Testing Patterns
+
+**IMPLEMENT** these testing strategies:
+
+### FastMCP Unit Testing
+```python
+"""
+FastMCP unit testing with in-memory patterns.
+"""
+import pytest
+from fastmcp import FastMCP, Client
+from typing import List, Dict, Any
+import asyncio
+
+# Test server setup
+@pytest.fixture
+def analysis_server():
+    """Create FastMCP server for testing."""
+    mcp = FastMCP("test-analysis-server")
+    
+    @mcp.tool
+    async def analyze_data(data: List[float], method: str = "mean") -> Dict[str, Any]:
+        """Tool for data analysis testing."""
+        if not data:
+            raise ValueError("Data cannot be empty")
+        
+        if method == "mean":
+            return {"result": sum(data) / len(data), "method": method}
+        elif method == "sum":
+            return {"result": sum(data), "method": method}
+        else:
+            raise ValueError(f"Unknown method: {method}")
+    
+    @mcp.resource("data://config")
+    async def get_config() -> Dict[str, Any]:
+        """Resource for configuration testing."""
+        return {
+            "version": "1.0.0",
+            "features": ["analysis", "reporting"],
+            "limits": {"max_data_points": 1000}
+        }
+    
+    @mcp.prompt("analysis")
+    async def analysis_prompt(data_type: str = "numeric") -> str:
+        """Prompt for analysis testing."""
+        return f"Analyze the {data_type} data using statistical methods."
+    
+    return mcp
+
+@pytest.fixture
+async def test_client(analysis_server):
+    """Create test client for FastMCP server."""
+    async with Client(analysis_server) as client:
+        yield client
+
+# Tool testing
+@pytest.mark.asyncio
+async def test_analyze_data_mean(test_client):
+    """Test data analysis tool with mean method."""
+    result = await test_client.call_tool(
+        "analyze_data",
+        {"data": [1.0, 2.0, 3.0, 4.0, 5.0], "method": "mean"}
+    )
+    
+    assert result.data["result"] == 3.0
+    assert result.data["method"] == "mean"
+
+@pytest.mark.asyncio
+async def test_analyze_data_sum(test_client):
+    """Test data analysis tool with sum method."""
+    result = await test_client.call_tool(
+        "analyze_data",
+        {"data": [1.0, 2.0, 3.0], "method": "sum"}
+    )
+    
+    assert result.data["result"] == 6.0
+    assert result.data["method"] == "sum"
+
+@pytest.mark.asyncio
+async def test_analyze_data_empty_error(test_client):
+    """Test error handling for empty data."""
+    with pytest.raises(Exception) as exc_info:
+        await test_client.call_tool("analyze_data", {"data": []})
+    
+    assert "Data cannot be empty" in str(exc_info.value)
+
+@pytest.mark.asyncio
+async def test_analyze_data_invalid_method(test_client):
+    """Test error handling for invalid method."""
+    with pytest.raises(Exception) as exc_info:
+        await test_client.call_tool(
+            "analyze_data",
+            {"data": [1.0, 2.0], "method": "invalid"}
+        )
+    
+    assert "Unknown method: invalid" in str(exc_info.value)
+
+# Resource testing
+@pytest.mark.asyncio
+async def test_get_config_resource(test_client):
+    """Test configuration resource."""
+    result = await test_client.get_resource("data://config")
+    
+    assert result.data["version"] == "1.0.0"
+    assert "analysis" in result.data["features"]
+    assert result.data["limits"]["max_data_points"] == 1000
+
+# Prompt testing
+@pytest.mark.asyncio
+async def test_analysis_prompt_default(test_client):
+    """Test analysis prompt with default parameter."""
+    result = await test_client.get_prompt("analysis")
+    
+    assert "Analyze the numeric data" in result.data
+
+@pytest.mark.asyncio
+async def test_analysis_prompt_custom(test_client):
+    """Test analysis prompt with custom parameter."""
+    result = await test_client.get_prompt("analysis", {"data_type": "categorical"})
+    
+    assert "Analyze the categorical data" in result.data
+
+# Parameterized testing
+@pytest.mark.parametrize("data,expected", [
+    ([1.0, 2.0, 3.0], 2.0),
+    ([0.0], 0.0),
+    ([10.0, 20.0], 15.0),
+    ([-1.0, 1.0], 0.0)
+])
+@pytest.mark.asyncio
+async def test_analyze_data_various_inputs(test_client, data, expected):
+    """Test data analysis with various inputs."""
+    result = await test_client.call_tool("analyze_data", {"data": data})
+    assert result.data["result"] == expected
+
+# Property-based testing
+from hypothesis import given, strategies as st
+
+@given(st.lists(st.floats(min_value=-1000, max_value=1000), min_size=1, max_size=100))
+@pytest.mark.asyncio
+async def test_analyze_data_property_based(test_client, data):
+    """Property-based test for data analysis."""
+    # Filter out NaN and infinite values
+    clean_data = [x for x in data if not (x != x or abs(x) == float('inf'))]
+    
+    if clean_data:
+        result = await test_client.call_tool("analyze_data", {"data": clean_data})
+        
+        # Properties that should always hold
+        assert isinstance(result.data["result"], (int, float))
+        assert result.data["method"] == "mean"
+        
+        # Mean should be within the range of input data
+        min_val, max_val = min(clean_data), max(clean_data)
+        assert min_val <= result.data["result"] <= max_val
+```
+
+### FastAPI Testing Integration
+```python
+"""
+FastAPI + FastMCP integration testing.
+"""
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from fastmcp import FastMCP
+from typing import Dict, Any
+import asyncio
+
+# Test application setup
+def create_test_app():
+    """Create test FastAPI + FastMCP application."""
+    app = FastAPI(title="Test API")
+    
+    # Create FastMCP server from FastAPI
+    mcp = FastMCP.from_fastapi(
+        app=app,
+        name="TestHybridServer",
+        httpx_client_kwargs={"timeout": 10.0}
+    )
+    
+    # Add MCP tools
+    @mcp.tool
+    async def process_api_data(
+        endpoint: str,
+        data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Process API data through MCP tool."""
+        return {
+            "endpoint": endpoint,
+            "processed_data": data,
+            "status": "processed"
+        }
+    
+    # Add FastAPI endpoints
+    @app.get("/health")
+    async def health_check():
+        return {"status": "healthy"}
+    
+    @app.post("/process")
+    async def process_data(data: Dict[str, Any]):
+        # Use MCP tool from FastAPI endpoint
+        result = await process_api_data("internal", data)
+        return {"api_result": result}
+    
+    return app, mcp
+
+@pytest.fixture
+def test_app():
+    """Create test application."""
+    app, mcp = create_test_app()
+    return app, mcp
+
+@pytest.fixture
+def fastapi_client(test_app):
+    """Create FastAPI test client."""
+    app, _ = test_app
+    return TestClient(app)
+
+@pytest.fixture
+async def mcp_client(test_app):
+    """Create MCP test client."""
+    _, mcp = test_app
+    async with Client(mcp) as client:
+        yield client
+
+# FastAPI endpoint testing
+def test_health_endpoint(fastapi_client):
+    """Test FastAPI health endpoint."""
+    response = fastapi_client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "healthy"
+
+def test_process_endpoint(fastapi_client):
+    """Test FastAPI process endpoint."""
+    test_data = {"value": 42, "type": "number"}
+    response = fastapi_client.post("/process", json=test_data)
+    
+    assert response.status_code == 200
+    result = response.json()
+    assert result["api_result"]["status"] == "processed"
+    assert result["api_result"]["processed_data"] == test_data
+
+# MCP tool testing
+@pytest.mark.asyncio
+async def test_process_api_data_tool(mcp_client):
+    """Test MCP tool functionality."""
+    result = await mcp_client.call_tool(
+        "process_api_data",
+        {"endpoint": "test", "data": {"key": "value"}}
+    )
+    
+    assert result.data["endpoint"] == "test"
+    assert result.data["processed_data"]["key"] == "value"
+    assert result.data["status"] == "processed"
+
+# Integration testing
+@pytest.mark.asyncio
+async def test_full_integration(test_app):
+    """Test full FastAPI + MCP integration."""
+    app, mcp = test_app
+    
+    # Test FastAPI side
+    with TestClient(app) as fastapi_client:
+        response = fastapi_client.post(
+            "/process",
+            json={"integration": "test", "value": 123}
+        )
+        assert response.status_code == 200
+    
+    # Test MCP side
+    async with Client(mcp) as mcp_client:
+        result = await mcp_client.call_tool(
+            "process_api_data",
+            {"endpoint": "integration", "data": {"test": True}}
+        )
+        assert result.data["status"] == "processed"
+```
+
+### Database Testing with FastMCP
+```python
+"""
+Database testing patterns for FastMCP applications.
+"""
+import pytest
+import pytest_asyncio
+from fastmcp import FastMCP
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+import aiosqlite
+
+Base = declarative_base()
+
+class TestData(Base):
+    """Test database model."""
+    __tablename__ = 'test_data'
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50))
+    value = Column(Integer)
+
+@pytest_asyncio.fixture
+async def test_db():
+    """Create test database."""
+    engine = create_async_engine(
+        "sqlite+aiosqlite:///:memory:",
+        echo=True
+    )
+    
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    
+    async_session = sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
+    
+    yield async_session
+    
+    await engine.dispose()
+
+@pytest.fixture
+def db_server(test_db):
+    """Create FastMCP server with database operations."""
+    mcp = FastMCP("test-db-server")
+    
+    @mcp.tool
+    async def create_record(name: str, value: int) -> Dict[str, Any]:
+        """Create a database record."""
+        async with test_db() as session:
+            record = TestData(name=name, value=value)
+            session.add(record)
+            await session.commit()
+            await session.refresh(record)
+            
+            return {
+                "id": record.id,
+                "name": record.name,
+                "value": record.value
+            }
+    
+    @mcp.tool
+    async def get_record(record_id: int) -> Dict[str, Any]:
+        """Get a database record by ID."""
+        async with test_db() as session:
+            record = await session.get(TestData, record_id)
+            
+            if record:
+                return {
+                    "id": record.id,
+                    "name": record.name,
+                    "value": record.value
+                }
+            else:
+                raise ValueError(f"Record with id {record_id} not found")
+    
+    return mcp
+
+@pytest.mark.asyncio
+async def test_database_operations(db_server):
+    """Test database operations through MCP tools."""
+    async with Client(db_server) as client:
+        # Create record
+        create_result = await client.call_tool(
+            "create_record",
+            {"name": "test_item", "value": 42}
+        )
+        
+        assert create_result.data["name"] == "test_item"
+        assert create_result.data["value"] == 42
+        record_id = create_result.data["id"]
+        
+        # Get record
+        get_result = await client.call_tool(
+            "get_record",
+            {"record_id": record_id}
+        )
+        
+        assert get_result.data["id"] == record_id
+        assert get_result.data["name"] == "test_item"
+        assert get_result.data["value"] == 42
+
+@pytest.mark.asyncio
+async def test_database_error_handling(db_server):
+    """Test database error handling."""
+    async with Client(db_server) as client:
+        with pytest.raises(Exception) as exc_info:
+            await client.call_tool("get_record", {"record_id": 99999})
+        
+        assert "Record with id 99999 not found" in str(exc_info.value)
+```
+
+### Performance Testing
+```python
+"""
+Performance testing for FastMCP applications.
+"""
+import pytest
+import asyncio
+import time
+from fastmcp import FastMCP, Client
+from typing import List, Dict, Any
+import statistics
+
+@pytest.fixture
+def performance_server():
+    """Create FastMCP server for performance testing."""
+    mcp = FastMCP("performance-test-server")
+    
+    @mcp.tool
+    async def fast_operation(data: List[int]) -> Dict[str, Any]:
+        """Fast operation for performance testing."""
+        return {"sum": sum(data), "count": len(data)}
+    
+    @mcp.tool
+    async def slow_operation(delay: float = 0.1) -> Dict[str, Any]:
+        """Slow operation for performance testing."""
+        await asyncio.sleep(delay)
+        return {"completed": True, "delay": delay}
+    
+    return mcp
+
+@pytest.mark.asyncio
+async def test_response_time_performance(performance_server):
+    """Test response time performance."""
+    async with Client(performance_server) as client:
+        start_time = time.time()
+        
+        result = await client.call_tool(
+            "fast_operation",
+            {"data": list(range(1000))}
+        )
+        
+        response_time = time.time() - start_time
+        
+        assert result.data["count"] == 1000
+        assert response_time < 0.1  # Should complete in under 100ms
+
+@pytest.mark.asyncio
+async def test_concurrent_performance(performance_server):
+    """Test concurrent request performance."""
+    async with Client(performance_server) as client:
+        
+        async def make_request():
+            return await client.call_tool(
+                "fast_operation",
+                {"data": [1, 2, 3, 4, 5]}
+            )
+        
+        start_time = time.time()
+        
+        # Make 100 concurrent requests
+        tasks = [make_request() for _ in range(100)]
+        results = await asyncio.gather(*tasks)
+        
+        total_time = time.time() - start_time
+        
+        assert len(results) == 100
+        assert all(r.data["sum"] == 15 for r in results)
+        assert total_time < 2.0  # Should complete in under 2 seconds
+
+@pytest.mark.asyncio
+async def test_load_testing(performance_server):
+    """Test server load capacity."""
+    async with Client(performance_server) as client:
+        
+        response_times = []
+        
+        for _ in range(50):
+            start_time = time.time()
+            
+            await client.call_tool(
+                "fast_operation",
+                {"data": list(range(100))}
+            )
+            
+            response_time = time.time() - start_time
+            response_times.append(response_time)
+        
+        # Calculate performance metrics
+        avg_response_time = statistics.mean(response_times)
+        p95_response_time = statistics.quantiles(response_times, n=20)[18]  # 95th percentile
+        
+        assert avg_response_time < 0.05  # Average under 50ms
+        assert p95_response_time < 0.1   # 95th percentile under 100ms
+```
+
+## Testing Configuration
+
+**USE** these testing configurations:
+
+### Pytest Configuration (conftest.py)
+```python
+"""
+Pytest configuration for FastMCP testing.
+"""
+import pytest
+import asyncio
+from typing import Generator
+import logging
+
+# Configure logging for tests
+logging.basicConfig(level=logging.INFO)
+
+# Async test support
+@pytest.fixture(scope="session")
+def event_loop() -> Generator:
+    """Create an instance of the default event loop for the test session."""
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
+
+# Test markers
+pytest_plugins = ["pytest_asyncio"]
+
+def pytest_configure(config):
+    """Configure pytest markers."""
+    config.addinivalue_line(
+        "markers", "unit: mark test as a unit test"
+    )
+    config.addinivalue_line(
+        "markers", "integration: mark test as an integration test"
+    )
+    config.addinivalue_line(
+        "markers", "performance: mark test as a performance test"
+    )
+    config.addinivalue_line(
+        "markers", "slow: mark test as slow running"
+    )
+
+# Common test fixtures
+@pytest.fixture
+def mock_external_api():
+    """Mock external API responses."""
+    return {
+        "status": "success",
+        "data": {"value": 42}
+    }
+
+@pytest.fixture
+async def cleanup_temp_files():
+    """Cleanup temporary files after tests."""
+    temp_files = []
+    
+    yield temp_files
+    
+    # Cleanup
+    for file_path in temp_files:
+        try:
+            import os
+            os.remove(file_path)
+        except FileNotFoundError:
+            pass
+```
+
+### pytest.ini Configuration
+```ini
+[tool:pytest]
+testpaths = tests
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+addopts = 
+    --strict-markers
+    --strict-config
+    --asyncio-mode=auto
+    --cov=src
+    --cov-report=term-missing
+    --cov-report=html
+    --cov-fail-under=90
+markers =
+    unit: Unit tests
+    integration: Integration tests
+    performance: Performance tests
+    slow: Slow running tests
+asyncio_mode = auto
+```
+
+## Testing Best Practices
+
+**FOLLOW** these testing best practices:
+
+### Test Organization
+- Separate unit, integration, and performance tests
+- Use descriptive test names that explain the scenario
+- Group related tests in test classes
+- Use fixtures for common setup and teardown
+
+### FastMCP-Specific Testing
+- Always use FastMCP Client for testing tools and resources
+- Test both success and error scenarios
+- Use parameterized tests for testing multiple inputs
+- Test async behavior and concurrency
+
+### FastAPI Integration Testing
+- Use TestClient for HTTP endpoint testing
+- Test dependency injection and middleware
+- Verify request/response serialization
+- Test authentication and authorization
+
+### Performance Testing
+- Set clear performance benchmarks
+- Test under various load conditions
+- Monitor resource usage during tests
+- Use profiling tools for optimization
+
+### Error Testing
+- Test all error conditions and edge cases
+- Verify proper error messages and status codes
+- Test error handling in async contexts
+- Test resource cleanup after failures
+
+## Quality Metrics
+
+**ACHIEVE** these testing quality metrics:
+
+### Coverage Requirements
+- Code coverage: >90%
+- Branch coverage: >85%
+- Function coverage: 100%
+- Critical path coverage: 100%
+
+### Performance Benchmarks
+- Unit test execution: <10ms average
+- Integration test execution: <1s average
+- Test suite completion: <5 minutes
+- Performance test baseline: Document and maintain
+
+### Test Reliability
+- Flaky test rate: <1%
+- Test failure investigation: <24 hours
+- Test maintenance: Regular updates with code changes
+- CI/CD integration: All tests must pass before deployment
+
+## References
+
+- [FastMCP Testing Guide](https://gofastmcp.com/testing) - Framework-specific testing patterns
+- [FastAPI Testing](https://fastapi.tiangolo.com/tutorial/testing/) - Web framework testing
+- [Pytest Documentation](https://docs.pytest.org/) - Testing framework reference
+- [MCP Instructions](./mcp.instructions.md) - Comprehensive FastMCP and FastAPI documentation
+- [Performance Instructions](./performance.instructions.md) - Performance testing guidelines
 - **ALWAYS** test error handling and protocol compliance
 - **DO** implement end-to-end testing with real language models
 - **DON'T** rely solely on unit tests without integration testing

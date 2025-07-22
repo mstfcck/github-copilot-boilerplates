@@ -1,23 +1,784 @@
 ---
 applyTo: '**'
 ---
+Performance instructions for FastMCP and FastAPI Model Context Protocol (MCP) applications.
 
-# MCP Performance Optimization Guide
+# Performance Instructions
 
-This document provides comprehensive performance optimization guidelines for Model Context Protocol (MCP) applications to ensure efficient resource utilization and optimal throughput.
+This document provides performance optimization guidelines for Model Context Protocol (MCP) applications using FastMCP framework and FastAPI integration.
 
 ## Requirements
 
-### Critical Requirements (**MUST** Follow)
-- **MUST** implement proper connection pooling for external resources
-- **REQUIRED** to use asynchronous I/O operations for all network calls
-- **SHALL** implement proper caching strategies for frequently accessed resources
-- **MUST** validate performance requirements before production deployment
+### Critical Performance Requirements (**MUST** Follow)
+- **MUST** use async/await patterns for all I/O operations in FastMCP
+- **REQUIRED** to implement proper connection pooling for database operations
+- **SHALL** optimize FastMCP tool execution time for <1 second response
+- **MUST** implement FastAPI async dependencies for database connections
 - **NEVER** block the event loop with synchronous operations
 
-### Strong Recommendations (**SHOULD** Implement)
-- **SHOULD** implement request timeout and circuit breaker patterns
-- **RECOMMENDED** to use streaming for large resource transfers
+### Strong Performance Recommendations (**SHOULD** Implement)
+- **SHOULD** cache frequently accessed resources using FastMCP resource caching
+- **RECOMMENDED** to use FastAPI dependency injection for shared services
+- **ALWAYS** implement proper error handling to prevent performance degradation
+- **DO** use FastMCP server composition for microservice architectures
+- **DON'T** perform expensive computations in MCP tool decorators
+
+### Optional Performance Enhancements (**MAY** Consider)
+- **MAY** implement FastAPI middleware for request/response optimization
+- **OPTIONAL** to use Redis caching for cross-request state
+- **USE** FastMCP proxy patterns for distributed performance
+- **IMPLEMENT** OpenAPI-based client optimization via FastAPI integration
+- **AVOID** premature optimization without performance profiling
+
+## FastMCP Performance Patterns
+
+**IMPLEMENT** these performance optimizations:
+
+### Async FastMCP Tool Implementation
+```python
+"""
+High-performance FastMCP tool implementation.
+"""
+from fastmcp import FastMCP
+import asyncio
+import aiohttp
+from typing import List, Dict, Any, Optional
+from concurrent.futures import ThreadPoolExecutor
+import time
+
+mcp = FastMCP("performance-optimized-server")
+
+# Thread pool for CPU-intensive operations
+executor = ThreadPoolExecutor(max_workers=4)
+
+@mcp.tool
+async def fast_data_processing(
+    data: List[Dict[str, Any]],
+    batch_size: int = 100,
+    use_parallel: bool = True
+) -> Dict[str, Any]:
+    """
+    High-performance data processing with batch optimization.
+    
+    Performance optimizations:
+    - Async processing with configurable batch sizes
+    - Parallel processing for CPU-intensive operations
+    - Memory-efficient streaming for large datasets
+    """
+    start_time = time.time()
+    
+    if use_parallel and len(data) > batch_size:
+        # Process in parallel batches
+        batches = [data[i:i + batch_size] for i in range(0, len(data), batch_size)]
+        
+        async def process_batch(batch):
+            # Offload CPU-intensive work to thread pool
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(executor, _cpu_intensive_processing, batch)
+        
+        # Process batches concurrently
+        results = await asyncio.gather(*[process_batch(batch) for batch in batches])
+        
+        # Combine results
+        final_result = _combine_results(results)
+    else:
+        # Process sequentially for small datasets
+        final_result = _cpu_intensive_processing(data)
+    
+    processing_time = time.time() - start_time
+    
+    return {
+        "result": final_result,
+        "performance": {
+            "processing_time": processing_time,
+            "items_processed": len(data),
+            "throughput": len(data) / processing_time if processing_time > 0 else 0,
+            "batches_used": len(data) // batch_size + 1 if use_parallel else 1
+        }
+    }
+
+def _cpu_intensive_processing(data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """CPU-intensive processing function."""
+    # Simulate complex computation
+    result = {"count": len(data), "sum": sum(item.get("value", 0) for item in data)}
+    return result
+
+def _combine_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Combine batch processing results."""
+    total_count = sum(r["count"] for r in results)
+    total_sum = sum(r["sum"] for r in results)
+    return {"count": total_count, "sum": total_sum}
+
+@mcp.tool
+async def optimized_external_api_call(
+    urls: List[str],
+    timeout: float = 5.0,
+    max_concurrent: int = 10
+) -> List[Dict[str, Any]]:
+    """
+    Optimized external API calls with connection pooling and concurrency control.
+    
+    Performance optimizations:
+    - Connection pooling with aiohttp
+    - Configurable concurrency limits
+    - Timeout management
+    - Error handling without blocking other requests
+    """
+    connector = aiohttp.TCPConnector(
+        limit=max_concurrent,
+        limit_per_host=5,
+        ttl_dns_cache=300,
+        use_dns_cache=True
+    )
+    
+    timeout_config = aiohttp.ClientTimeout(total=timeout)
+    
+    async with aiohttp.ClientSession(
+        connector=connector,
+        timeout=timeout_config
+    ) as session:
+        
+        semaphore = asyncio.Semaphore(max_concurrent)
+        
+        async def fetch_url(url: str) -> Dict[str, Any]:
+            async with semaphore:
+                try:
+                    start_time = time.time()
+                    async with session.get(url) as response:
+                        data = await response.json()
+                        response_time = time.time() - start_time
+                        
+                        return {
+                            "url": url,
+                            "status": response.status,
+                            "data": data,
+                            "response_time": response_time,
+                            "success": True
+                        }
+                except asyncio.TimeoutError:
+                    return {
+                        "url": url,
+                        "error": "timeout",
+                        "success": False
+                    }
+                except Exception as e:
+                    return {
+                        "url": url,
+                        "error": str(e),
+                        "success": False
+                    }
+        
+        results = await asyncio.gather(*[fetch_url(url) for url in urls])
+        return results
+```
+
+### FastMCP Resource Caching
+```python
+"""
+High-performance resource caching with FastMCP.
+"""
+from fastmcp import FastMCP
+import asyncio
+from typing import Dict, Any, Optional
+import time
+from functools import lru_cache
+import json
+
+mcp = FastMCP("cached-resource-server")
+
+# In-memory cache with TTL
+_resource_cache: Dict[str, Dict[str, Any]] = {}
+_cache_timestamps: Dict[str, float] = {}
+CACHE_TTL = 300  # 5 minutes
+
+async def get_cached_resource(
+    resource_id: str,
+    fetch_func,
+    ttl: int = CACHE_TTL
+) -> Dict[str, Any]:
+    """
+    Generic caching mechanism for FastMCP resources.
+    
+    Args:
+        resource_id: Unique identifier for the resource
+        fetch_func: Async function to fetch the resource if not cached
+        ttl: Time-to-live for cached data in seconds
+    
+    Returns:
+        Cached or freshly fetched resource data
+    """
+    current_time = time.time()
+    
+    # Check if we have valid cached data
+    if (resource_id in _resource_cache and 
+        resource_id in _cache_timestamps and
+        current_time - _cache_timestamps[resource_id] < ttl):
+        
+        return _resource_cache[resource_id]
+    
+    # Fetch fresh data
+    fresh_data = await fetch_func()
+    
+    # Update cache
+    _resource_cache[resource_id] = fresh_data
+    _cache_timestamps[resource_id] = current_time
+    
+    return fresh_data
+
+@mcp.resource("perf://data/{data_type}")
+async def get_performance_data(data_type: str) -> Dict[str, Any]:
+    """
+    High-performance data resource with intelligent caching.
+    
+    Caches expensive database queries and external API calls.
+    """
+    
+    async def fetch_data():
+        # Simulate expensive data fetching
+        await asyncio.sleep(0.1)  # Simulate database query
+        
+        if data_type == "analytics":
+            return {
+                "type": data_type,
+                "metrics": {
+                    "requests_per_minute": 150,
+                    "average_response_time": 0.8,
+                    "error_rate": 0.02
+                },
+                "timestamp": time.time()
+            }
+        elif data_type == "system":
+            return {
+                "type": data_type,
+                "system": {
+                    "cpu_usage": 15.5,
+                    "memory_usage": 45.2,
+                    "disk_usage": 30.1
+                },
+                "timestamp": time.time()
+            }
+        else:
+            return {
+                "type": data_type,
+                "error": "Unknown data type",
+                "timestamp": time.time()
+            }
+    
+    # Use different TTL based on data type
+    ttl = 60 if data_type == "system" else 300  # System data changes more frequently
+    
+    return await get_cached_resource(
+        f"performance_data_{data_type}",
+        fetch_data,
+        ttl
+    )
+
+@lru_cache(maxsize=128)
+def expensive_computation(input_data: str) -> str:
+    """
+    CPU-intensive computation with LRU caching.
+    
+    Uses functools.lru_cache for pure function memoization.
+    """
+    # Simulate expensive computation
+    result = hash(input_data * 1000) % 10000
+    return f"computed_{result}"
+
+@mcp.resource("compute://cached/{input_value}")
+async def get_computed_result(input_value: str) -> Dict[str, Any]:
+    """
+    Resource that uses computational caching.
+    """
+    start_time = time.time()
+    
+    # Use cached computation
+    result = expensive_computation(input_value)
+    
+    computation_time = time.time() - start_time
+    
+    return {
+        "input": input_value,
+        "result": result,
+        "computation_time": computation_time,
+        "cached": computation_time < 0.001  # Likely cached if very fast
+    }
+```
+
+### FastAPI + FastMCP Performance Integration
+```python
+"""
+High-performance FastAPI + FastMCP integration patterns.
+"""
+from fastapi import FastAPI, Depends, BackgroundTasks
+from fastmcp import FastMCP
+import asyncio
+from typing import Dict, Any, List, Optional
+import time
+from contextlib import asynccontextmanager
+import aioredis
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
+# Performance-optimized FastAPI app
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    FastAPI lifespan management for resource optimization.
+    """
+    # Startup: Initialize connection pools and caches
+    app.state.redis = await aioredis.from_url("redis://localhost:6379")
+    app.state.db_engine = create_async_engine(
+        "postgresql+asyncpg://user:pass@localhost/db",
+        pool_size=20,
+        max_overflow=30,
+        pool_pre_ping=True
+    )
+    app.state.db_session = sessionmaker(
+        app.state.db_engine,
+        class_=AsyncSession,
+        expire_on_commit=False
+    )
+    
+    yield
+    
+    # Shutdown: Close connections
+    await app.state.redis.close()
+    await app.state.db_engine.dispose()
+
+app = FastAPI(
+    title="High-Performance MCP API",
+    lifespan=lifespan
+)
+
+# Create FastMCP server from FastAPI with optimizations
+mcp = FastMCP.from_fastapi(
+    app=app,
+    name="PerformanceOptimizedServer",
+    httpx_client_kwargs={
+        "timeout": 30.0,
+        "limits": {"max_keepalive_connections": 20, "max_connections": 100}
+    }
+)
+
+# Dependency injection for optimized database access
+async def get_db_session() -> AsyncSession:
+    """Get database session from connection pool."""
+    async with app.state.db_session() as session:
+        yield session
+
+async def get_redis_client():
+    """Get Redis client for caching."""
+    return app.state.redis
+
+@mcp.tool
+async def optimized_database_query(
+    query_type: str,
+    parameters: Dict[str, Any],
+    use_cache: bool = True,
+    db_session: AsyncSession = Depends(get_db_session),
+    redis_client = Depends(get_redis_client)
+) -> Dict[str, Any]:
+    """
+    Optimized database query with caching and connection pooling.
+    
+    Performance features:
+    - Connection pooling via dependency injection
+    - Redis caching for frequently accessed data
+    - Query optimization and batching
+    """
+    cache_key = f"query_{query_type}_{hash(str(parameters))}"
+    
+    # Check cache first
+    if use_cache:
+        cached_result = await redis_client.get(cache_key)
+        if cached_result:
+            return {
+                "data": json.loads(cached_result),
+                "cached": True,
+                "query_time": 0
+            }
+    
+    # Execute database query
+    start_time = time.time()
+    
+    # Simulate optimized database query
+    await asyncio.sleep(0.05)  # Simulate query time
+    
+    result_data = {
+        "query_type": query_type,
+        "parameters": parameters,
+        "results": [{"id": i, "value": f"result_{i}"} for i in range(10)],
+        "count": 10
+    }
+    
+    query_time = time.time() - start_time
+    
+    # Cache the result
+    if use_cache:
+        await redis_client.setex(
+            cache_key,
+            300,  # 5 minute TTL
+            json.dumps(result_data)
+        )
+    
+    return {
+        "data": result_data,
+        "cached": False,
+        "query_time": query_time
+    }
+
+@app.middleware("http")
+async def performance_middleware(request, call_next):
+    """
+    Performance monitoring middleware.
+    """
+    start_time = time.time()
+    
+    response = await call_next(request)
+    
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    
+    # Log slow requests
+    if process_time > 1.0:
+        print(f"Slow request: {request.url.path} took {process_time:.2f}s")
+    
+    return response
+
+@app.get("/health")
+async def health_check():
+    """
+    High-performance health check endpoint.
+    """
+    return {
+        "status": "healthy",
+        "timestamp": time.time(),
+        "version": "1.0.0"
+    }
+
+# Background task for performance optimization
+@mcp.tool
+async def schedule_background_processing(
+    task_data: Dict[str, Any],
+    background_tasks: BackgroundTasks
+) -> Dict[str, str]:
+    """
+    Schedule background processing to avoid blocking requests.
+    """
+    
+    def process_in_background(data: Dict[str, Any]):
+        """Background processing function."""
+        # Simulate heavy processing
+        time.sleep(2)
+        print(f"Background processing completed for: {data.get('id', 'unknown')}")
+    
+    background_tasks.add_task(process_in_background, task_data)
+    
+    return {
+        "message": "Task scheduled for background processing",
+        "task_id": task_data.get("id", "unknown"),
+        "status": "queued"
+    }
+```
+
+## Performance Monitoring
+
+**IMPLEMENT** comprehensive performance monitoring:
+
+### FastMCP Performance Metrics
+```python
+"""
+Performance monitoring for FastMCP applications.
+"""
+from fastmcp import FastMCP
+import time
+import asyncio
+from typing import Dict, Any, List
+from collections import defaultdict, deque
+import statistics
+
+class PerformanceMonitor:
+    """FastMCP performance monitoring utility."""
+    
+    def __init__(self, max_samples: int = 1000):
+        self.max_samples = max_samples
+        self.tool_metrics = defaultdict(lambda: deque(maxlen=max_samples))
+        self.resource_metrics = defaultdict(lambda: deque(maxlen=max_samples))
+        self.error_counts = defaultdict(int)
+    
+    def record_tool_execution(self, tool_name: str, duration: float, success: bool):
+        """Record tool execution metrics."""
+        self.tool_metrics[tool_name].append({
+            "duration": duration,
+            "timestamp": time.time(),
+            "success": success
+        })
+        
+        if not success:
+            self.error_counts[f"tool_{tool_name}"] += 1
+    
+    def record_resource_access(self, resource_uri: str, duration: float, success: bool):
+        """Record resource access metrics."""
+        self.resource_metrics[resource_uri].append({
+            "duration": duration,
+            "timestamp": time.time(),
+            "success": success
+        })
+        
+        if not success:
+            self.error_counts[f"resource_{resource_uri}"] += 1
+    
+    def get_performance_summary(self) -> Dict[str, Any]:
+        """Get comprehensive performance summary."""
+        summary = {
+            "tools": {},
+            "resources": {},
+            "errors": dict(self.error_counts),
+            "timestamp": time.time()
+        }
+        
+        # Tool performance summary
+        for tool_name, metrics in self.tool_metrics.items():
+            if metrics:
+                durations = [m["duration"] for m in metrics if m["success"]]
+                if durations:
+                    summary["tools"][tool_name] = {
+                        "avg_duration": statistics.mean(durations),
+                        "median_duration": statistics.median(durations),
+                        "min_duration": min(durations),
+                        "max_duration": max(durations),
+                        "total_calls": len(metrics),
+                        "success_rate": sum(1 for m in metrics if m["success"]) / len(metrics)
+                    }
+        
+        # Resource performance summary
+        for resource_uri, metrics in self.resource_metrics.items():
+            if metrics:
+                durations = [m["duration"] for m in metrics if m["success"]]
+                if durations:
+                    summary["resources"][resource_uri] = {
+                        "avg_duration": statistics.mean(durations),
+                        "median_duration": statistics.median(durations),
+                        "total_accesses": len(metrics),
+                        "success_rate": sum(1 for m in metrics if m["success"]) / len(metrics)
+                    }
+        
+        return summary
+
+# Global performance monitor
+performance_monitor = PerformanceMonitor()
+
+def performance_tracked_tool(func):
+    """Decorator to add performance tracking to FastMCP tools."""
+    async def wrapper(*args, **kwargs):
+        start_time = time.time()
+        success = True
+        
+        try:
+            result = await func(*args, **kwargs)
+            return result
+        except Exception as e:
+            success = False
+            raise
+        finally:
+            duration = time.time() - start_time
+            performance_monitor.record_tool_execution(
+                func.__name__,
+                duration,
+                success
+            )
+    
+    return wrapper
+
+# Usage example
+mcp = FastMCP("performance-monitored-server")
+
+@mcp.tool
+@performance_tracked_tool
+async def monitored_analysis_tool(data: List[float]) -> Dict[str, Any]:
+    """Analysis tool with performance monitoring."""
+    await asyncio.sleep(0.1)  # Simulate processing
+    
+    return {
+        "mean": sum(data) / len(data),
+        "count": len(data),
+        "processing_time": 0.1
+    }
+
+@mcp.resource("perf://metrics")
+async def get_performance_metrics() -> Dict[str, Any]:
+    """Get current performance metrics."""
+    return performance_monitor.get_performance_summary()
+```
+
+## Optimization Guidelines
+
+**FOLLOW** these performance optimization guidelines:
+
+### Memory Management
+- Use generators for large data processing in FastMCP tools
+- Implement proper cleanup in async context managers
+- Monitor memory usage with FastAPI middleware
+- Use weak references for caches when appropriate
+
+### Concurrency Optimization
+- Limit concurrent FastMCP tool executions with semaphores
+- Use asyncio.gather() for parallel processing
+- Implement backpressure mechanisms for high-throughput scenarios
+- Use FastAPI dependency injection for shared resources
+
+### Database Performance
+- Use connection pooling with SQLAlchemy async engines
+- Implement query batching for multiple operations
+- Use Redis for session storage and caching
+- Optimize database queries with proper indexing
+
+### Network Optimization
+- Configure appropriate timeouts for external API calls
+- Use HTTP/2 when possible for FastAPI applications
+- Implement request/response compression
+- Use CDN for static assets in hybrid applications
+
+### Caching Strategies
+- Implement multi-level caching (memory + Redis)
+- Use cache-aside pattern for frequently accessed data
+- Set appropriate TTL based on data volatility
+- Monitor cache hit rates and adjust strategies
+
+## Performance Testing
+
+**IMPLEMENT** comprehensive performance testing:
+
+### Load Testing FastMCP Tools
+```python
+"""
+Load testing for FastMCP tools.
+"""
+import asyncio
+import time
+from fastmcp import FastMCP, Client
+from typing import List, Dict, Any
+
+async def load_test_tool(
+    server: FastMCP,
+    tool_name: str,
+    tool_args: Dict[str, Any],
+    concurrent_requests: int = 10,
+    total_requests: int = 100
+) -> Dict[str, Any]:
+    """
+    Load test a specific FastMCP tool.
+    
+    Args:
+        server: FastMCP server instance
+        tool_name: Name of the tool to test
+        tool_args: Arguments to pass to the tool
+        concurrent_requests: Number of concurrent requests
+        total_requests: Total number of requests to make
+    
+    Returns:
+        Performance test results
+    """
+    start_time = time.time()
+    successes = 0
+    failures = 0
+    response_times = []
+    
+    semaphore = asyncio.Semaphore(concurrent_requests)
+    
+    async def make_request():
+        nonlocal successes, failures
+        
+        async with semaphore:
+            request_start = time.time()
+            try:
+                async with Client(server) as client:
+                    await client.call_tool(tool_name, tool_args)
+                
+                response_time = time.time() - request_start
+                response_times.append(response_time)
+                successes += 1
+                
+            except Exception as e:
+                failures += 1
+                print(f"Request failed: {e}")
+    
+    # Create all requests
+    tasks = [make_request() for _ in range(total_requests)]
+    
+    # Execute all requests
+    await asyncio.gather(*tasks)
+    
+    total_time = time.time() - start_time
+    
+    return {
+        "tool_name": tool_name,
+        "total_requests": total_requests,
+        "concurrent_requests": concurrent_requests,
+        "successes": successes,
+        "failures": failures,
+        "total_time": total_time,
+        "requests_per_second": total_requests / total_time,
+        "avg_response_time": sum(response_times) / len(response_times) if response_times else 0,
+        "min_response_time": min(response_times) if response_times else 0,
+        "max_response_time": max(response_times) if response_times else 0
+    }
+
+# Usage example
+async def run_performance_tests():
+    """Run comprehensive performance tests."""
+    server = FastMCP("test-server")
+    
+    # Add test tool
+    @server.tool
+    async def test_tool(data: List[int]) -> Dict[str, Any]:
+        await asyncio.sleep(0.01)  # Simulate processing
+        return {"result": sum(data)}
+    
+    # Run load test
+    results = await load_test_tool(
+        server,
+        "test_tool",
+        {"data": [1, 2, 3, 4, 5]},
+        concurrent_requests=20,
+        total_requests=1000
+    )
+    
+    print(f"Performance Test Results: {results}")
+
+if __name__ == "__main__":
+    asyncio.run(run_performance_tests())
+```
+
+## Benchmarking Standards
+
+**MAINTAIN** these performance benchmarks:
+
+### Response Time Targets
+- FastMCP tool execution: < 1 second average
+- Resource access: < 500ms average
+- FastAPI endpoints: < 200ms average
+- Database queries: < 100ms average
+
+### Throughput Targets
+- FastMCP tools: > 100 requests/second
+- FastAPI endpoints: > 500 requests/second
+- Database operations: > 1000 queries/second
+- Cache operations: > 10,000 operations/second
+
+### Resource Utilization
+- CPU usage: < 70% under normal load
+- Memory usage: < 80% of available memory
+- Database connections: < 80% of pool size
+- Network bandwidth: Monitor and optimize based on usage
+
+## References
+
+- [FastMCP Performance Guide](https://gofastmcp.com/performance) - Framework-specific optimizations
+- [FastAPI Performance](https://fastapi.tiangolo.com/advanced/performance/) - Web framework optimization
+- [MCP Instructions](./mcp.instructions.md) - Comprehensive FastMCP and FastAPI documentation
+- [Architecture Instructions](./architecture.instructions.md) - FastMCP architecture patterns
+- [Coding Standards](./coding-standards.instructions.md) - FastMCP coding standards
 - **ALWAYS** monitor performance metrics in production
 - **DO** implement proper resource cleanup and memory management
 - **DON'T** create unnecessary object instances in hot paths
