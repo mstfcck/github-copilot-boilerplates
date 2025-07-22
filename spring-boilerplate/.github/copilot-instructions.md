@@ -58,6 +58,8 @@ When developing features, **ALWAYS** ask these questions to guide architecture d
 - Follow proper layered architecture (Controller → Service → Repository)
 - Use dependency injection properly with constructor injection preferred
 - Implement proper security measures (authentication, authorization, input sanitization)
+- **USE** semantic search capabilities to find relevant code patterns and documentation
+- **IMPLEMENT** Context7 integration for up-to-date Spring documentation access
 
 **DO** implement these patterns:
 - Repository pattern for data access
@@ -65,6 +67,8 @@ When developing features, **ALWAYS** ask these questions to guide architecture d
 - DTO pattern for data transfer
 - Builder pattern for complex object creation
 - Factory pattern where appropriate
+- **Semantic search patterns** for finding relevant implementation examples
+- **Context7 integration** for accessing current Spring Boot documentation
 
 **DON'T** do these anti-patterns:
 - Field injection (use constructor injection)
@@ -72,6 +76,7 @@ When developing features, **ALWAYS** ask these questions to guide architecture d
 - Tight coupling between layers
 - Exposing internal implementation details
 - Ignoring exception handling
+- **Relying solely on outdated documentation** without Context7 verification
 
 ## Code Quality Requirements
 
@@ -82,6 +87,8 @@ When developing features, **ALWAYS** ask these questions to guide architecture d
 - Proper logging at appropriate levels
 - Input validation and error handling
 - Security considerations
+- **Semantic search validation** to ensure implementation follows current best practices
+- **Context7 documentation verification** for up-to-date Spring Boot guidance
 
 **SHOULD** consider:
 - Performance optimization
@@ -89,12 +96,42 @@ When developing features, **ALWAYS** ask these questions to guide architecture d
 - Database optimization
 - Monitoring and observability
 - Documentation updates
+- **Using semantic search** to find relevant code patterns across the codebase
+- **Leveraging Context7** for the latest Spring Boot documentation and examples
 
 **NICE TO HAVE**:
 - Load testing scenarios
 - Security testing
 - Performance benchmarks
 - Advanced monitoring dashboards
+- **Automated semantic search integration** in CI/CD pipelines
+- **Context7 MCP server** setup for development teams
+
+## AI-Assisted Development
+
+**MUST** leverage AI tools effectively:
+- **USE** semantic search to find relevant code patterns and implementations
+- **IMPLEMENT** Context7 MCP server for accessing up-to-date Spring Boot documentation
+- **ENSURE** AI-generated code follows established patterns found through semantic search
+- **VALIDATE** AI suggestions against current Spring Boot best practices via Context7
+
+**ALWAYS** when using AI assistance:
+- Append 'use context7' to prompts for Spring Boot-specific queries
+- Use semantic search to find similar implementations in the codebase
+- Verify AI-generated code against current Spring Boot documentation
+- Cross-reference patterns found through semantic search with Context7 documentation
+
+**Context7 Integration Commands:**
+```bash
+# For Spring Boot specific queries
+Create a Spring Boot REST controller with proper exception handling. use context7
+
+# For Spring Security implementation
+Implement JWT authentication with Spring Security 6.x. use library /springframework/spring-security for current docs
+
+# For Spring Data JPA queries
+Create JPA repository with custom queries and pagination. use context7
+```
 
 ## Other Considerations
 
@@ -105,3 +142,18 @@ For specific implementation guidance, refer to the specialized instructions in t
 **MUST** use this document as a living guide to ensure all contributions align with the project's architectural vision and coding standards. Regularly review and update these guidelines as the project evolves and new best practices emerge.
 
 **MUST** use the `.github/prompts/project-initialization.prompt.md` to understand the project's setup and configuration.
+
+**ALWAYS** leverage semantic search and Context7 integration:
+- Use semantic search to find relevant code patterns before implementing new features
+- Verify implementation approaches against current Spring Boot documentation via Context7
+- Cross-reference patterns found in the codebase with official Spring Boot guidelines
+- Keep Context7 MCP server updated for the latest Spring Boot versions
+
+## Sub-Instructions
+
+Reference to specialized instruction files:
+- **[Architecture Guide](./instructions/architecture.instructions.md)** - Includes semantic search architectural patterns
+- **[Security Guide](./instructions/security.instructions.md)** - Security best practices with Context7 integration
+- **[Testing Guide](./instructions/testing.instructions.md)** - Testing strategies with semantic search validation
+- **[Performance Guide](./instructions/performance.instructions.md)** - Performance optimization with current Spring Boot practices
+- **[Data Persistence Guide](./instructions/data-persistence.instructions.md)** - JPA patterns with semantic search examples

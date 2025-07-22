@@ -233,6 +233,7 @@ All official SDKs provide:
 Learn from these official reference implementations:
 
 ### Core Examples
+- **[Context7 Server](https://github.com/upstash/context7)**: Up-to-date documentation MCP server with semantic search capabilities
 - **[Everything Server](https://github.com/modelcontextprotocol/servers/tree/main/src/everything)**: Complete feature demonstration
 - **[Filesystem Server](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem)**: File operations with security controls
 - **[Git Server](https://github.com/modelcontextprotocol/servers/tree/main/src/git)**: Repository management and manipulation
