@@ -2,7 +2,7 @@
 
 A comprehensive collection of pre-configured boilerplate projects with GitHub Copilot instructions and prompts to accelerate development across different technology stacks.
 
-## 🚀 Overview
+## Overview
 
 This repository contains carefully crafted boilerplate projects that include:
 
@@ -13,9 +13,9 @@ This repository contains carefully crafted boilerplate projects that include:
 
 Each boilerplate is designed to help developers quickly bootstrap new projects while following industry best practices and maintaining high code quality standards through AI-guided development.
 
-## 📂 Available Boilerplates
+## Available Boilerplates
 
-### 🌱 [Spring Boilerplate](./spring-boilerplate/)
+### [Spring Boilerplate](./spring-boilerplate/)
 
 Enterprise-grade Spring Boot application boilerplate with comprehensive AI-guided instructions.
 
@@ -36,7 +36,7 @@ Enterprise-grade Spring Boot application boilerplate with comprehensive AI-guide
 - RESTful API backends
 - Cloud-native applications
 
-### 🤖 [MCP Boilerplate](./mcp-boilerplate/)
+### [MCP Boilerplate](./mcp-boilerplate/)
 
 Model Context Protocol (MCP) application boilerplate for building AI-integrated applications.
 
@@ -55,7 +55,7 @@ Model Context Protocol (MCP) application boilerplate for building AI-integrated 
 - Language model integrations
 - Protocol-based communication
 
-## 🎯 Getting Started
+## Getting Started
 
 ### 1. Choose Your Boilerplate
 
@@ -83,7 +83,7 @@ Each boilerplate contains a `.github/copilot-instructions.md` file with comprehe
 2. Review and customize the instructions based on your specific requirements
 3. Start developing with AI assistance using the provided guidelines
 
-## 📋 Instruction Structure
+## Instruction Structure
 
 Each boilerplate follows a consistent instruction structure:
 
@@ -102,11 +102,11 @@ Each boilerplate follows a consistent instruction structure:
 
 ### Instruction Types
 
-- **📝 Instructions (.instructions.md)**: Comprehensive guidelines for specific development areas
-- **🎯 Prompts (.prompt.md)**: Ready-to-use prompts for common development scenarios
-- **📚 Documentation**: Reference materials and specifications
+- **Instructions (.instructions.md)**: Comprehensive guidelines for specific development areas
+- **Prompts (.prompt.md)**: Ready-to-use prompts for common development scenarios
+- **Documentation**: Reference materials and specifications
 
-## 🛠️ How to Use with GitHub Copilot
+## How to Use with GitHub Copilot
 
 ### 1. Set Up Copilot Instructions
 
@@ -131,7 +131,7 @@ Leverage the prompt files for complex scenarios:
 @api-design Create RESTful endpoints for user management
 ```
 
-## 🎨 Customization Guidelines
+## Customization Guidelines
 
 ### Adding New Instructions
 
@@ -154,7 +154,7 @@ Leverage the prompt files for complex scenarios:
 3. Adjust testing strategies
 4. Update security guidelines
 
-## 📚 Documentation Standards
+## Documentation Standards
 
 Each boilerplate includes comprehensive documentation:
 
@@ -163,7 +163,7 @@ Each boilerplate includes comprehensive documentation:
 - **API Documentation**: OpenAPI/Swagger specifications where applicable
 - **Deployment Guides**: Environment setup and deployment instructions
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions to improve these boilerplates:
 
@@ -180,11 +180,11 @@ We welcome contributions to improve these boilerplates:
 - Test instructions with GitHub Copilot
 - Update documentation as needed
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🔗 Related Resources
+## Related Resources
 
 - [GitHub Copilot Documentation](https://docs.github.com/en/copilot)
 - [Spring Boot Documentation](https://spring.io/projects/spring-boot)

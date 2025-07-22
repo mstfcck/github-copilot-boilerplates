@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to GitHub Copilot Boilerplates! This project aims to provide high-quality, AI-guided development templates that accelerate software development across different technology stacks.
 
-## 🎯 How to Contribute
+## How to Contribute
 
 We welcome contributions in several areas:
 
@@ -23,7 +23,7 @@ We welcome contributions in several areas:
 - **Security**: Enhance security best practices
 - **Accessibility**: Improve developer experience
 
-## 📋 Contribution Guidelines
+## Contribution Guidelines
 
 ### Boilerplate Standards
 
@@ -124,7 +124,7 @@ Brief description of the instruction area.
 [Link to official documentation]
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Fork and Clone
 ```bash
@@ -156,7 +156,7 @@ git checkout -b feature/your-contribution-name
 - Reference any related issues
 - Include screenshots or examples if applicable
 
-## 🔍 Review Process
+## Review Process
 
 ### What We Look For
 - **Quality**: High-quality, actionable instructions
@@ -172,7 +172,7 @@ git checkout -b feature/your-contribution-name
 4. **Security**: Includes appropriate security measures
 5. **Maintainability**: Code is maintainable and well-structured
 
-## 📝 Issue Guidelines
+## Issue Guidelines
 
 ### Reporting Issues
 When reporting issues, please include:
@@ -189,7 +189,7 @@ For feature requests, please include:
 - Suggested implementation approach
 - Potential impact on existing boilerplates
 
-## 📚 Resources
+## Resources
 
 ### Development Resources
 - [GitHub Copilot Documentation](https://docs.github.com/en/copilot)
@@ -207,7 +207,7 @@ For feature requests, please include:
 - Check for broken links and references
 - Verify code examples compile and run
 
-## 🏆 Recognition
+## Recognition
 
 Contributors will be:
 - Listed in the project's contributors section
@@ -215,7 +215,7 @@ Contributors will be:
 - Given credit in relevant documentation
 - Invited to join the maintainer team for significant contributions
 
-## 📞 Getting Help
+## Getting Help
 
 If you need help with your contribution:
 - Open an issue with the `question` label
@@ -223,7 +223,7 @@ If you need help with your contribution:
 - Review existing contributions for examples
 - Check the project documentation
 
-## 🎉 Thank You
+## Thank You
 
 Thank you for contributing to GitHub Copilot Boilerplates! Your contributions help developers worldwide build better software faster with AI assistance.
 
