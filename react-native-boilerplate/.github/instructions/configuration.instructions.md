@@ -2,82 +2,913 @@
 applyTo: '**'
 ---
 
-# Configuration Instructions
+# Enterprise Configuration Instructions
 
-This document outlines environment configuration, build settings, and project configuration management for React Native applications. It covers development, staging, and production environments with proper security and performance configurations.
+This document outlines enterprise-level configuration management, server-driven module configuration, and multi-environment setup for React Native applications with dynamic module systems and user-type-specific configurations.
 
 ## Requirements
 
 ### Critical Requirements (**MUST** Follow)
 
-- **MUST** implement proper environment variable management with secure storage
-- **REQUIRED** to separate configuration for development, staging, and production environments
-- **SHALL** implement proper API endpoint configuration with environment switching
-- **MUST** secure sensitive configuration values and never commit secrets
-- **NEVER** hardcode environment-specific values in source code
-- **REQUIRED** to implement proper build configuration for different environments
-- **SHALL** implement proper logging configuration with environment-based levels
-- **MUST** implement proper feature flag management system
-- **REQUIRED** to implement proper app configuration validation
-- **SHALL** handle configuration errors gracefully with fallback mechanisms
+- **MUST** implement server-driven configuration for all module activations
+- **REQUIRED** to support user-type-specific configuration without client-side secrets
+- **SHALL** implement configuration validation and schema enforcement
+- **MUST** support hot configuration updates without app restarts
+- **NEVER** hardcode module configurations or user permissions in client code
+- **REQUIRED** to implement configuration fallback mechanisms for network failures
+- **SHALL** implement proper configuration caching and synchronization
+- **MUST** validate all configuration changes before applying them
+- **REQUIRED** to implement configuration versioning and rollback capabilities
+- **SHALL** support environment-specific configuration management
 
 ### Strong Recommendations (**SHOULD** Implement)
 
-- **SHOULD** use centralized configuration management system
-- **RECOMMENDED** to implement configuration hot reloading for development
-- **ALWAYS** validate configuration values at application startup
-- **DO** implement configuration schema validation
-- **SHOULD** use type-safe configuration interfaces
-- **RECOMMENDED** to implement configuration monitoring and alerting
-- **DO** implement proper configuration versioning
-- **ALWAYS** document all configuration options and their purposes
-- **SHOULD** implement configuration testing and validation pipelines
+- **SHOULD** implement configuration A/B testing capabilities
+- **RECOMMENDED** to use configuration as code for version control
+- **ALWAYS** implement configuration monitoring and alerting
+- **DO** implement configuration audit logging for compliance
+- **SHOULD** use encrypted configuration storage for sensitive data
+- **RECOMMENDED** to implement gradual configuration rollouts
+- **DO** implement configuration performance monitoring
+- **ALWAYS** implement proper configuration backup and recovery
+- **SHOULD** implement configuration dependency management
 
 ### Optional Enhancements (**MAY** Consider)
 
-- **MAY** implement remote configuration management
-- **OPTIONAL** to use configuration as code approaches
-- **USE** configuration management tools for complex deployments
-- **IMPLEMENT** configuration rollback mechanisms
+- **MAY** implement real-time configuration synchronization across devices
+- **OPTIONAL** to use advanced configuration management platforms
+- **USE** machine learning for configuration optimization
+- **IMPLEMENT** configuration analytics and usage insights
 - **AVOID** over-engineering configuration for simple applications
 
-## Implementation Guidance
+## Enterprise Configuration Architecture
 
-### Environment Configuration Management
+### Server-Driven Module Configuration
+
+**MUST** implement this configuration pattern:
+
+```typescript
+// types/configuration.types.ts
+export interface EnterpriseConfiguration {
+  version: string;
+  timestamp: number;
+  environment: Environment;
+  userTypes: UserTypeConfiguration[];
+  modules: ModuleConfiguration[];
+  features: FeatureFlags;
+  security: SecurityConfiguration;
+  performance: PerformanceConfiguration;
+}
+
+export interface UserTypeConfiguration {
+  id: string;
+  name: string;
+  permissions: Permission[];
+  modules: UserModuleConfig[];
+  ui: UserInterfaceConfig;
+  settings: UserTypeSettings;
+}
+
+export interface ModuleConfiguration {
+  id: string;
+  name: string;
+  version: string;
+  enabled: boolean;
+  environments: Environment[];
+  userTypes: string[];
+  dependencies: ModuleDependency[];
+  settings: ModuleSettings;
+  performance: ModulePerformanceConfig;
+  security: ModuleSecurityConfig;
+}
+
+export interface UserModuleConfig {
+  moduleId: string;
+  enabled: boolean;
+  permissions: string[];
+  settings: Record<string, any>;
+  features: Record<string, boolean>;
+}
+
+// Configuration service implementation
+export class ConfigurationService {
+  private cache: Map<string, any> = new Map();
+  private lastFetch: number = 0;
+  private cacheTTL: number = 5 * 60 * 1000; // 5 minutes
+
+  async fetchConfiguration(
+    userId: string,
+    userType: string,
+    environment: Environment
+  ): Promise<EnterpriseConfiguration> {
+    const cacheKey = `config_${userId}_${userType}_${environment}`;
+    
+    // Check cache first
+    if (this.isCacheValid(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+
+    try {
+      const response = await this.apiClient.post('/api/configuration', {
+        userId,
+        userType,
+        environment,
+        version: this.getCurrentVersion()
+      });
+
+      const config = this.validateConfiguration(response.data);
+      this.cache.set(cacheKey, config);
+      this.lastFetch = Date.now();
+
+      return config;
+    } catch (error) {
+      console.error('Failed to fetch configuration:', error);
+      return this.getFallbackConfiguration(userType);
+    }
+  }
+
+  private validateConfiguration(
+    config: any
+  ): EnterpriseConfiguration {
+    // Implement comprehensive configuration validation
+    const schema = this.getConfigurationSchema();
+    const result = schema.validate(config);
+    
+    if (result.error) {
+      throw new Error(`Invalid configuration: ${result.error.message}`);
+    }
+
+    return result.value;
+  }
+
+  private getFallbackConfiguration(
+    userType: string
+  ): EnterpriseConfiguration {
+    // Return minimal safe configuration for offline scenarios
+    return this.getDefaultConfiguration(userType);
+  }
+
+  async updateConfiguration(
+    config: Partial<EnterpriseConfiguration>
+  ): Promise<void> {
+    // Validate configuration update
+    const validatedConfig = this.validateConfigurationUpdate(config);
+    
+    // Apply configuration with rollback capability
+    const rollback = this.createRollbackPoint();
+    
+    try {
+      await this.applyConfiguration(validatedConfig);
+    } catch (error) {
+      console.error('Configuration update failed, rolling back:', error);
+      await this.rollback(rollback);
+      throw error;
+    }
+  }
+
+  // Hot configuration updates
+  subscribeToConfigurationUpdates(
+    callback: (config: EnterpriseConfiguration) => void
+  ): () => void {
+    return this.configurationEventBus.subscribe(
+      'configuration.updated',
+      callback
+    );
+  }
+}
+```
+
+### Module Configuration Management
+
+**IMPLEMENT** dynamic module configuration:
+
+```typescript
+// core/configuration/services/moduleConfigService.ts
+export class ModuleConfigurationService {
+  private moduleConfigs: Map<string, ModuleConfiguration> = new Map();
+  private userModuleConfigs: Map<string, UserModuleConfig[]> = new Map();
+
+  async loadModuleConfigurations(
+    userType: string,
+    userId: string
+  ): Promise<void> {
+    try {
+      // Fetch module configurations from server
+      const response = await this.apiClient.get(
+        `/api/modules/configuration`,
+        {
+          params: { userType, userId }
+        }
+      );
+
+      const { modules, userModules } = response.data;
+      
+      // Store module configurations
+      modules.forEach((config: ModuleConfiguration) => {
+        this.moduleConfigs.set(config.id, config);
+      });
+
+      // Store user-specific module configurations
+      this.userModuleConfigs.set(userId, userModules);
+
+      // Notify modules of configuration changes
+      this.notifyConfigurationUpdates();
+    } catch (error) {
+      console.error('Failed to load module configurations:', error);
+      await this.loadFallbackConfigurations();
+    }
+  }
+
+  getModuleConfiguration(moduleId: string): ModuleConfiguration | null {
+    return this.moduleConfigs.get(moduleId) || null;
+  }
+
+  getUserModuleConfiguration(
+    userId: string,
+    moduleId: string
+  ): UserModuleConfig | null {
+    const userConfigs = this.userModuleConfigs.get(userId);
+    return userConfigs?.find(config => config.moduleId === moduleId) || null;
+  }
+
+  isModuleEnabled(
+    userId: string,
+    moduleId: string
+  ): boolean {
+    const moduleConfig = this.getModuleConfiguration(moduleId);
+    const userConfig = this.getUserModuleConfiguration(userId, moduleId);
+
+    return moduleConfig?.enabled && userConfig?.enabled;
+  }
+
+  getModuleSettings(
+    userId: string,
+    moduleId: string
+  ): Record<string, any> {
+    const userConfig = this.getUserModuleConfiguration(userId, moduleId);
+    const moduleConfig = this.getModuleConfiguration(moduleId);
+
+    return {
+      ...moduleConfig?.settings,
+      ...userConfig?.settings
+    };
+  }
+
+  async updateModuleConfiguration(
+    moduleId: string,
+    updates: Partial<ModuleConfiguration>
+  ): Promise<void> {
+    const currentConfig = this.getModuleConfiguration(moduleId);
+    
+    if (!currentConfig) {
+      throw new Error(`Module ${moduleId} not found`);
+    }
+
+    const updatedConfig = { ...currentConfig, ...updates };
+    
+    // Validate configuration
+    this.validateModuleConfiguration(updatedConfig);
+    
+    // Update server
+    await this.apiClient.put(
+      `/api/modules/${moduleId}/configuration`,
+      updatedConfig
+    );
+
+    // Update local cache
+    this.moduleConfigs.set(moduleId, updatedConfig);
+
+    // Notify module of configuration change
+    this.notifyModuleConfigurationUpdate(moduleId, updatedConfig);
+  }
+
+  private validateModuleConfiguration(
+    config: ModuleConfiguration
+  ): void {
+    // Implement module configuration validation
+    const schema = this.getModuleConfigurationSchema();
+    const result = schema.validate(config);
+    
+    if (result.error) {
+      throw new Error(
+        `Invalid module configuration: ${result.error.message}`
+      );
+    }
+  }
+
+  private notifyConfigurationUpdates(): void {
+    this.eventBus.emit('modules.configuration.updated', {
+      timestamp: Date.now(),
+      modules: Array.from(this.moduleConfigs.values())
+    });
+  }
+}
+```
+
+### Environment-Specific Configuration
 
 **USE** proper environment configuration patterns:
 
 ```typescript
-// config/env.ts
-import { Platform } from 'react-native';
-import Config from 'react-native-config';
-
+// config/environment.config.ts
 export type Environment = 'development' | 'staging' | 'production';
 
-export interface AppConfig {
-  // Environment
-  environment: Environment;
-  isDevelopment: boolean;
-  isStaging: boolean;
-  isProduction: boolean;
-  
-  // API Configuration
-  apiBaseUrl: string;
-  apiTimeout: number;
-  apiRetryAttempts: number;
-  
-  // Authentication
-  authTokenKey: string;
-  refreshTokenKey: string;
-  authTimeout: number;
-  
-  // Feature Flags
+export interface EnvironmentConfig {
+  name: Environment;
+  api: ApiConfiguration;
+  features: FeatureFlags;
+  performance: PerformanceConfiguration;
+  security: SecurityConfiguration;
+  logging: LoggingConfiguration;
+  analytics: AnalyticsConfiguration;
+}
+
+const environmentConfigurations: Record<Environment, EnvironmentConfig> = {
+  development: {
+    name: 'development',
+    api: {
+      baseUrl: 'https://dev-api.workforce.app',
+      timeout: 30000,
+      retryAttempts: 3,
+      enableMocking: true
+    },
+    features: {
+      debugMode: true,
+      performanceMonitoring: true,
+      analyticsEnabled: false,
+      crashReporting: false,
+      betaFeatures: true
+    },
+    performance: {
+      enableProfiling: true,
+      trackMemoryUsage: true,
+      moduleLoadTimeout: 10000,
+      cacheEnabled: false
+    },
+    security: {
+      allowInsecureConnections: true,
+      enableCertificatePinning: false,
+      sessionTimeout: 3600000, // 1 hour
+      enableBiometrics: false
+    },
+    logging: {
+      level: 'debug',
+      enableConsoleLogging: true,
+      enableRemoteLogging: false,
+      maxLogSize: 10485760 // 10MB
+    },
+    analytics: {
+      enabled: false,
+      sampleRate: 1.0,
+      enableCrashReporting: false
+    }
+  },
+  staging: {
+    name: 'staging',
+    api: {
+      baseUrl: 'https://staging-api.workforce.app',
+      timeout: 20000,
+      retryAttempts: 2,
+      enableMocking: false
+    },
+    features: {
+      debugMode: false,
+      performanceMonitoring: true,
+      analyticsEnabled: true,
+      crashReporting: true,
+      betaFeatures: true
+    },
+    performance: {
+      enableProfiling: false,
+      trackMemoryUsage: true,
+      moduleLoadTimeout: 8000,
+      cacheEnabled: true
+    },
+    security: {
+      allowInsecureConnections: false,
+      enableCertificatePinning: true,
+      sessionTimeout: 1800000, // 30 minutes
+      enableBiometrics: true
+    },
+    logging: {
+      level: 'info',
+      enableConsoleLogging: false,
+      enableRemoteLogging: true,
+      maxLogSize: 5242880 // 5MB
+    },
+    analytics: {
+      enabled: true,
+      sampleRate: 0.1,
+      enableCrashReporting: true
+    }
+  },
+  production: {
+    name: 'production',
+    api: {
+      baseUrl: 'https://api.workforce.app',
+      timeout: 15000,
+      retryAttempts: 2,
+      enableMocking: false
+    },
+    features: {
+      debugMode: false,
+      performanceMonitoring: false,
+      analyticsEnabled: true,
+      crashReporting: true,
+      betaFeatures: false
+    },
+    performance: {
+      enableProfiling: false,
+      trackMemoryUsage: false,
+      moduleLoadTimeout: 5000,
+      cacheEnabled: true
+    },
+    security: {
+      allowInsecureConnections: false,
+      enableCertificatePinning: true,
+      sessionTimeout: 900000, // 15 minutes
+      enableBiometrics: true
+    },
+    logging: {
+      level: 'error',
+      enableConsoleLogging: false,
+      enableRemoteLogging: true,
+      maxLogSize: 2097152 // 2MB
+    },
+    analytics: {
+      enabled: true,
+      sampleRate: 0.01,
+      enableCrashReporting: true
+    }
+  }
+};
+
+## Configuration Validation and Schema
+
+**IMPLEMENT** comprehensive configuration validation:
+
+```typescript
+// core/configuration/validation/configurationSchema.ts
+import Joi from 'joi';
+
+export const moduleConfigurationSchema = Joi.object({
+  id: Joi.string().required(),
+  name: Joi.string().required(),
+  version: Joi.string().pattern(/^\d+\.\d+\.\d+$/).required(),
+  enabled: Joi.boolean().required(),
+  environments: Joi.array().items(
+    Joi.string().valid('development', 'staging', 'production')
+  ).required(),
+  userTypes: Joi.array().items(Joi.string()).required(),
+  dependencies: Joi.array().items(
+    Joi.object({
+      moduleId: Joi.string().required(),
+      version: Joi.string().pattern(/^\d+\.\d+\.\d+$/).required(),
+      required: Joi.boolean().default(true)
+    })
+  ).default([]),
+  settings: Joi.object().default({}),
+  performance: Joi.object({
+    lazy: Joi.boolean().default(true),
+    preload: Joi.boolean().default(false),
+    timeout: Joi.number().min(1000).max(30000).default(5000),
+    retryAttempts: Joi.number().min(0).max(5).default(3)
+  }).default({}),
+  security: Joi.object({
+    requiresAuth: Joi.boolean().default(true),
+    permissions: Joi.array().items(Joi.string()).default([]),
+    encryptStorage: Joi.boolean().default(false)
+  }).default({})
+});
+
+export const userTypeConfigurationSchema = Joi.object({
+  id: Joi.string().required(),
+  name: Joi.string().required(),
+  permissions: Joi.array().items(
+    Joi.object({
+      id: Joi.string().required(),
+      name: Joi.string().required(),
+      description: Joi.string().optional()
+    })
+  ).required(),
+  modules: Joi.array().items(
+    Joi.object({
+      moduleId: Joi.string().required(),
+      enabled: Joi.boolean().required(),
+      permissions: Joi.array().items(Joi.string()).default([]),
+      settings: Joi.object().default({}),
+      features: Joi.object().default({})
+    })
+  ).required(),
+  ui: Joi.object({
+    theme: Joi.string().required(),
+    primaryColor: Joi.string().pattern(/^#[0-9A-F]{6}$/i).required(),
+    secondaryColor: Joi.string().pattern(/^#[0-9A-F]{6}$/i).required(),
+    navigationStyle: Joi.string().valid('tab', 'drawer', 'stack').required(),
+    dashboardLayout: Joi.string().valid('grid', 'list', 'cards').required()
+  }).required(),
+  settings: Joi.object({
+    defaultView: Joi.string().required(),
+    autoLogout: Joi.number().min(5).max(480).required(),
+    notifications: Joi.boolean().default(true)
+  }).required()
+});
+
+export const enterpriseConfigurationSchema = Joi.object({
+  version: Joi.string().pattern(/^\d+\.\d+\.\d+$/).required(),
+  timestamp: Joi.number().required(),
+  environment: Joi.string().valid('development', 'staging', 'production').required(),
+  userTypes: Joi.array().items(userTypeConfigurationSchema).min(1).required(),
+  modules: Joi.array().items(moduleConfigurationSchema).min(1).required(),
+  features: Joi.object().default({}),
+  security: Joi.object({
+    sessionTimeout: Joi.number().min(300000).max(7200000).required(),
+    enableBiometrics: Joi.boolean().default(false),
+    requireStrongPassword: Joi.boolean().default(true),
+    maxLoginAttempts: Joi.number().min(3).max(10).default(5)
+  }).default({}),
+  performance: Joi.object({
+    enableCaching: Joi.boolean().default(true),
+    cacheTimeout: Joi.number().min(60000).max(3600000).default(300000),
+    enableProfiling: Joi.boolean().default(false),
+    maxMemoryUsage: Joi.number().min(50).max(500).default(200)
+  }).default({})
+});
+```
+
+### Configuration Hot Updates
+
+**IMPLEMENT** real-time configuration updates:
+
+```typescript
+// core/configuration/services/hotUpdateService.ts
+export class ConfigurationHotUpdateService {
+  private websocketConnection: WebSocket | null = null;
+  private listeners: Map<string, Function[]> = new Map();
+  private currentConfig: EnterpriseConfiguration | null = null;
+
+  async initialize(userId: string, userType: string): Promise<void> {
+    // Establish WebSocket connection for real-time updates
+    await this.connectWebSocket(userId, userType);
+    
+    // Subscribe to configuration change events
+    this.subscribeToConfigurationChanges();
+    
+    // Set up periodic configuration sync
+    this.setupPeriodicSync();
+  }
+
+  private async connectWebSocket(
+    userId: string, 
+    userType: string
+  ): Promise<void> {
+    const wsUrl = `${this.getWebSocketUrl()}/configuration?userId=${userId}&userType=${userType}`;
+    
+    this.websocketConnection = new WebSocket(wsUrl);
+    
+    this.websocketConnection.onmessage = (event) => {
+      this.handleConfigurationUpdate(JSON.parse(event.data));
+    };
+
+    this.websocketConnection.onclose = () => {
+      console.log('Configuration WebSocket connection closed, attempting reconnect...');
+      setTimeout(() => this.connectWebSocket(userId, userType), 5000);
+    };
+
+    this.websocketConnection.onerror = (error) => {
+      console.error('Configuration WebSocket error:', error);
+    };
+  }
+
+  private handleConfigurationUpdate(update: ConfigurationUpdate): void {
+    try {
+      // Validate configuration update
+      const validatedUpdate = this.validateConfigurationUpdate(update);
+      
+      // Apply configuration update
+      this.applyConfigurationUpdate(validatedUpdate);
+      
+      // Notify listeners
+      this.notifyConfigurationChange(validatedUpdate);
+      
+      console.log('Configuration updated successfully:', validatedUpdate);
+    } catch (error) {
+      console.error('Failed to apply configuration update:', error);
+    }
+  }
+
+  private applyConfigurationUpdate(update: ConfigurationUpdate): void {
+    switch (update.type) {
+      case 'module.enabled':
+        this.updateModuleStatus(update.moduleId, update.enabled);
+        break;
+      case 'module.settings':
+        this.updateModuleSettings(update.moduleId, update.settings);
+        break;
+      case 'userType.permissions':
+        this.updateUserTypePermissions(update.userType, update.permissions);
+        break;
+      case 'feature.flag':
+        this.updateFeatureFlag(update.featureId, update.enabled);
+        break;
+      default:
+        console.warn('Unknown configuration update type:', update.type);
+    }
+  }
+
+  subscribeToConfigurationChanges(
+    callback: (update: ConfigurationUpdate) => void
+  ): () => void {
+    const eventType = 'configuration.updated';
+    
+    if (!this.listeners.has(eventType)) {
+      this.listeners.set(eventType, []);
+    }
+    
+    this.listeners.get(eventType)!.push(callback);
+    
+    // Return unsubscribe function
+    return () => {
+      const callbacks = this.listeners.get(eventType);
+      if (callbacks) {
+        const index = callbacks.indexOf(callback);
+        if (index > -1) {
+          callbacks.splice(index, 1);
+        }
+      }
+    };
+  }
+}
+```
+
+### Configuration Examples
+
+**USE** these configuration examples for enterprise applications:
+
+```typescript
+// Example: Workforce Management App Configuration
+export const workforceManagementConfig: EnterpriseConfiguration = {
+  version: "1.0.0",
+  timestamp: Date.now(),
+  environment: "production",
+  userTypes: [
+    {
+      id: "employer",
+      name: "Employer",
+      permissions: [
+        { id: "time.manage", name: "Manage Time Tracking" },
+        { id: "schedule.create", name: "Create Schedules" },
+        { id: "payroll.process", name: "Process Payroll" },
+        { id: "analytics.view", name: "View Analytics" },
+        { id: "employees.manage", name: "Manage Employees" }
+      ],
+      modules: [
+        {
+          moduleId: "timeTracking",
+          enabled: true,
+          permissions: ["time.manage", "time.approve"],
+          settings: {
+            autoClockOut: true,
+            overtimeCalculation: "daily",
+            breakDeductions: true,
+            geoFencing: true
+          },
+          features: {
+            bulkTimeEdit: true,
+            timeSheetExport: true,
+            realTimeTracking: true
+          }
+        },
+        {
+          moduleId: "scheduling",
+          enabled: true,
+          permissions: ["schedule.create", "schedule.assign"],
+          settings: {
+            autoAssignment: false,
+            conflictResolution: "manual",
+            advanceNotice: 168, // hours
+            shiftSwapping: true
+          },
+          features: {
+            dragDropScheduling: true,
+            massScheduling: true,
+            templateSchedules: true
+          }
+        },
+        {
+          moduleId: "payroll",
+          enabled: true,
+          permissions: ["payroll.process", "payroll.export"],
+          settings: {
+            payPeriod: "biweekly",
+            overtimeThreshold: 40,
+            taxCalculation: "automatic",
+            directDeposit: true
+          },
+          features: {
+            customDeductions: true,
+            bonusCalculation: true,
+            payStubGeneration: true
+          }
+        }
+      ],
+      ui: {
+        theme: "employer",
+        primaryColor: "#1F2937",
+        secondaryColor: "#3B82F6",
+        navigationStyle: "drawer",
+        dashboardLayout: "grid"
+      },
+      settings: {
+        defaultView: "dashboard",
+        autoLogout: 30,
+        notifications: true
+      }
+    },
+    {
+      id: "employee",
+      name: "Employee",
+      permissions: [
+        { id: "time.track", name: "Track Time" },
+        { id: "schedule.view", name: "View Schedule" },
+        { id: "schedule.request", name: "Request Schedule Changes" },
+        { id: "communication.send", name: "Send Messages" },
+        { id: "profile.edit", name: "Edit Profile" }
+      ],
+      modules: [
+        {
+          moduleId: "timeTracking",
+          enabled: true,
+          permissions: ["time.track", "time.view"],
+          settings: {
+            autoClockOut: false,
+            breakReminders: true,
+            geoTracking: true
+          },
+          features: {
+            quickClockIn: true,
+            photoTimeStamp: false,
+            offlineTracking: true
+          }
+        },
+        {
+          moduleId: "scheduling",
+          enabled: true,
+          permissions: ["schedule.view", "schedule.request"],
+          settings: {
+            viewAdvance: 336, // hours (2 weeks)
+            requestAdvance: 72, // hours
+            swapRequests: true
+          },
+          features: {
+            availabilitySettings: true,
+            shiftSwapRequests: true,
+            scheduleNotifications: true
+          }
+        }
+      ],
+      ui: {
+        theme: "employee",
+        primaryColor: "#059669",
+        secondaryColor: "#10B981",
+        navigationStyle: "tab",
+        dashboardLayout: "cards"
+      },
+      settings: {
+        defaultView: "timeTracking",
+        autoLogout: 60,
+        notifications: true
+      }
+    }
+  ],
+  modules: [
+    {
+      id: "timeTracking",
+      name: "Time Tracking",
+      version: "1.2.0",
+      enabled: true,
+      environments: ["development", "staging", "production"],
+      userTypes: ["employer", "employee"],
+      dependencies: [],
+      settings: {
+        precision: "minute",
+        timezone: "automatic",
+        rounding: "nearest_quarter"
+      },
+      performance: {
+        lazy: true,
+        preload: false,
+        timeout: 5000,
+        retryAttempts: 3
+      },
+      security: {
+        requiresAuth: true,
+        permissions: ["time.track", "time.manage"],
+        encryptStorage: true
+      }
+    },
+    {
+      id: "scheduling",
+      name: "Scheduling",
+      version: "1.1.0",
+      enabled: true,
+      environments: ["development", "staging", "production"],
+      userTypes: ["employer", "employee"],
+      dependencies: ["timeTracking"],
+      settings: {
+        weekStart: "monday",
+        timeFormat: "24h",
+        conflictDetection: true
+      },
+      performance: {
+        lazy: true,
+        preload: true,
+        timeout: 8000,
+        retryAttempts: 2
+      },
+      security: {
+        requiresAuth: true,
+        permissions: ["schedule.view", "schedule.create"],
+        encryptStorage: false
+      }
+    }
+  ],
   features: {
-    analytics: boolean;
-    crashReporting: boolean;
-    debugMode: boolean;
-    betaFeatures: boolean;
-  };
+    analytics: true,
+    pushNotifications: true,
+    biometricAuth: true,
+    offlineMode: true,
+    darkMode: true
+  },
+  security: {
+    sessionTimeout: 1800000, // 30 minutes
+    enableBiometrics: true,
+    requireStrongPassword: true,
+    maxLoginAttempts: 5
+  },
+  performance: {
+    enableCaching: true,
+    cacheTimeout: 300000, // 5 minutes
+    enableProfiling: false,
+    maxMemoryUsage: 200 // MB
+  }
+};
+```
+
+## Anti-Patterns
+
+**DON'T** implement these configuration approaches:
+
+### Configuration Anti-Patterns
+
+- **NEVER** store sensitive configuration data in client-side code
+- **AVOID** hardcoding user permissions or module access in the application
+- **DON'T** implement configuration without proper validation schemas
+- **NEVER** ignore configuration update failures without proper error handling
+- **AVOID** configuration caching without proper invalidation strategies
+- **DON'T** implement configuration without proper fallback mechanisms
+- **NEVER** allow configuration changes without proper authorization
+- **AVOID** configuration updates that don't support rollback
+
+### Security Anti-Patterns
+
+- **NEVER** expose configuration management APIs without proper authentication
+- **AVOID** storing configuration in plain text on device storage
+- **DON'T** implement configuration without proper audit logging
+- **NEVER** allow client-side modification of security-critical configurations
+- **AVOID** configuration transmission without proper encryption
+
+## Validation Checklist
+
+**MUST** verify these configuration requirements:
+
+### Configuration Management
+- [ ] Server-driven configuration is implemented and tested
+- [ ] Configuration validation schemas are comprehensive
+- [ ] Hot configuration updates work without app restart
+- [ ] Configuration fallback mechanisms are tested
+- [ ] Configuration caching and synchronization work properly
+
+### Security Validation
+- [ ] Sensitive configuration is properly protected
+- [ ] Configuration access is properly authorized
+- [ ] Configuration changes are properly audited
+- [ ] Configuration transmission is encrypted
+- [ ] Configuration storage follows security best practices
+
+### Performance Validation
+- [ ] Configuration loading doesn't block app startup
+- [ ] Configuration caching improves performance
+- [ ] Configuration updates are applied efficiently
+- [ ] Memory usage is optimized for configuration storage
+
+## References
+
+- [Server-Driven UI Architecture](https://engineering.fb.com/2021/08/26/android/server-driven-ui/)
+- [Configuration Management Best Practices](https://12factor.net/config)
+- [Feature Flag Implementation Patterns](https://martinfowler.com/articles/feature-toggles.html)
+- [Enterprise Security Configuration](https://owasp.org/www-project-application-security-verification-standard/)
+```
   
   // Logging
   logLevel: 'debug' | 'info' | 'warn' | 'error';
