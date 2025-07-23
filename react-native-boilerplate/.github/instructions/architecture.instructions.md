@@ -160,38 +160,266 @@ export const useUserManagement = () => {
 **MUST** organize code using this structure:
 
 ```
-src/
-├── components/           # Reusable UI components
-│   ├── common/          # Generic components (Button, Input, etc.)
-│   ├── forms/           # Form-specific components
-│   └── layout/          # Layout components (Header, Footer, etc.)
-├── screens/             # Screen components
-│   ├── auth/           # Authentication screens
-│   ├── profile/        # Profile-related screens
-│   └── settings/       # Settings screens
-├── hooks/              # Custom React hooks
-│   ├── api/           # API-related hooks
-│   ├── navigation/    # Navigation hooks
-│   └── storage/       # Storage hooks
-├── services/           # Business logic and external services
-│   ├── api/           # API service layer
-│   ├── storage/       # Storage services
-│   └── auth/          # Authentication services
-├── store/             # State management
-│   ├── slices/        # State slices (if using Redux)
-│   └── providers/     # Context providers
-├── utils/             # Utility functions
-│   ├── validation/    # Validation helpers
-│   ├── formatting/    # Data formatting utilities
-│   └── constants/     # Application constants
-├── types/             # TypeScript type definitions
-│   ├── api.ts         # API response types
-│   ├── navigation.ts  # Navigation types
-│   └── common.ts      # Common types
-└── assets/            # Static assets
-    ├── images/        # Image assets
-    ├── fonts/         # Font files
-    └── icons/         # Icon assets
+SuperApp/
+├── android/
+├── ios/
+├── src/
+│   ├── app/                           # App-level configurations
+│   │   ├── config/
+│   │   │   ├── app.config.ts         # App configuration
+│   │   │   ├── env.config.ts         # Environment variables
+│   │   │   └── feature-flags.config.ts
+│   │   ├── providers/                 # App-level providers
+│   │   │   ├── AppProvider.tsx
+│   │   │   ├── ThemeProvider.tsx
+│   │   │   └── FeatureFlagProvider.tsx
+│   │   └── App.tsx                   # Root component
+│   │
+│   ├── core/                         # Core functionality
+│   │   ├── api/
+│   │   │   ├── client/
+│   │   │   │   ├── apiClient.ts
+│   │   │   │   ├── interceptors.ts
+│   │   │   │   └── endpoints.ts
+│   │   │   ├── services/
+│   │   │   │   ├── auth.service.ts
+│   │   │   │   ├── user.service.ts
+│   │   │   │   └── base.service.ts
+│   │   │   └── types/
+│   │   │       └── api.types.ts
+│   │   │
+│   │   ├── auth/                     # Authentication core
+│   │   │   ├── hooks/
+│   │   │   │   ├── useAuth.ts
+│   │   │   │   └── usePermissions.ts
+│   │   │   ├── providers/
+│   │   │   │   └── AuthProvider.tsx
+│   │   │   ├── guards/
+│   │   │   │   ├── AuthGuard.tsx
+│   │   │   │   └── RoleGuard.tsx
+│   │   │   └── utils/
+│   │   │       ├── tokenManager.ts
+│   │   │       └── authHelpers.ts
+│   │   │
+│   │   ├── navigation/               # Navigation architecture
+│   │   │   ├── navigators/
+│   │   │   │   ├── RootNavigator.tsx
+│   │   │   │   ├── AuthNavigator.tsx
+│   │   │   │   ├── CustomerNavigator.tsx
+│   │   │   │   └── MerchantNavigator.tsx
+│   │   │   ├── types/
+│   │   │   │   └── navigation.types.ts
+│   │   │   └── utils/
+│   │   │       └── navigationHelpers.ts
+│   │   │
+│   │   ├── store/                    # State management
+│   │   │   ├── slices/
+│   │   │   │   ├── auth/
+│   │   │   │   │   ├── authSlice.ts
+│   │   │   │   │   └── authSelectors.ts
+│   │   │   │   ├── user/
+│   │   │   │   │   ├── userSlice.ts
+│   │   │   │   │   └── userSelectors.ts
+│   │   │   │   └── app/
+│   │   │   │       ├── appSlice.ts
+│   │   │   │       └── appSelectors.ts
+│   │   │   ├── middleware/
+│   │   │   │   └── apiMiddleware.ts
+│   │   │   ├── store.ts
+│   │   │   └── rootReducer.ts
+│   │   │
+│   │   ├── i18n/                     # Internationalization
+│   │   │   ├── locales/
+│   │   │   │   ├── en/
+│   │   │   │   │   ├── common.json
+│   │   │   │   │   ├── customer.json
+│   │   │   │   │   └── merchant.json
+│   │   │   │   └── es/
+│   │   │   ├── i18n.config.ts
+│   │   │   └── useTranslation.ts
+│   │   │
+│   │   └── utils/                    # Core utilities
+│   │       ├── constants/
+│   │       │   ├── app.constants.ts
+│   │       │   └── user.constants.ts
+│   │       ├── helpers/
+│   │       ├── validators/
+│   │       └── formatters/
+│   │
+│   ├── features/                     # Feature modules
+│   │   ├── shared/                   # Shared features
+│   │   │   ├── components/
+│   │   │   │   ├── ui/
+│   │   │   │   │   ├── Button/
+│   │   │   │   │   ├── Input/
+│   │   │   │   │   └── Card/
+│   │   │   │   └── layout/
+│   │   │   │       ├── Header/
+│   │   │   │       └── TabBar/
+│   │   │   ├── hooks/
+│   │   │   └── utils/
+│   │   │
+│   │   ├── customer/                 # Customer-specific features
+│   │   │   ├── home/
+│   │   │   │   ├── screens/
+│   │   │   │   │   └── HomeScreen.tsx
+│   │   │   │   ├── components/
+│   │   │   │   │   ├── FeaturedProducts.tsx
+│   │   │   │   │   └── CategoryGrid.tsx
+│   │   │   │   ├── hooks/
+│   │   │   │   │   └── useHomeData.ts
+│   │   │   │   └── services/
+│   │   │   │       └── home.service.ts
+│   │   │   │
+│   │   │   ├── shopping/
+│   │   │   │   ├── screens/
+│   │   │   │   │   ├── ProductListScreen.tsx
+│   │   │   │   │   ├── ProductDetailScreen.tsx
+│   │   │   │   │   └── CartScreen.tsx
+│   │   │   │   ├── components/
+│   │   │   │   ├── hooks/
+│   │   │   │   └── services/
+│   │   │   │
+│   │   │   ├── orders/
+│   │   │   │   ├── screens/
+│   │   │   │   ├── components/
+│   │   │   │   └── services/
+│   │   │   │
+│   │   │   └── profile/
+│   │   │       ├── screens/
+│   │   │       ├── components/
+│   │   │       └── services/
+│   │   │
+│   │   ├── merchant/                 # Merchant-specific features
+│   │   │   ├── dashboard/
+│   │   │   │   ├── screens/
+│   │   │   │   │   └── DashboardScreen.tsx
+│   │   │   │   ├── components/
+│   │   │   │   │   ├── SalesChart.tsx
+│   │   │   │   │   └── QuickStats.tsx
+│   │   │   │   └── services/
+│   │   │   │
+│   │   │   ├── inventory/
+│   │   │   │   ├── screens/
+│   │   │   │   │   ├── InventoryListScreen.tsx
+│   │   │   │   │   └── AddProductScreen.tsx
+│   │   │   │   ├── components/
+│   │   │   │   └── services/
+│   │   │   │
+│   │   │   ├── analytics/
+│   │   │   │   ├── screens/
+│   │   │   │   ├── components/
+│   │   │   │   └── services/
+│   │   │   │
+│   │   │   └── settings/
+│   │   │       ├── screens/
+│   │   │       ├── components/
+│   │   │       └── services/
+│   │   │
+│   │   └── modules/                  # Pluggable modules
+│   │       ├── payment/
+│   │       │   ├── index.ts
+│   │       │   ├── screens/
+│   │       │   ├── components/
+│   │       │   ├── services/
+│   │       │   └── module.config.ts
+│   │       │
+│   │       ├── delivery/
+│   │       │   ├── index.ts
+│   │       │   ├── screens/
+│   │       │   ├── components/
+│   │       │   └── module.config.ts
+│   │       │
+│   │       └── loyalty/
+│   │           ├── index.ts
+│   │           ├── screens/
+│   │           ├── components/
+│   │           └── module.config.ts
+│   │
+│   ├── infrastructure/               # Infrastructure layer
+│   │   ├── feature-flags/
+│   │   │   ├── FeatureFlagService.ts
+│   │   │   ├── flags.config.ts
+│   │   │   └── hooks/
+│   │   │       └── useFeatureFlag.ts
+│   │   │
+│   │   ├── analytics/
+│   │   │   ├── AnalyticsService.ts
+│   │   │   ├── providers/
+│   │   │   │   ├── FirebaseAnalytics.ts
+│   │   │   │   └── MixpanelAnalytics.ts
+│   │   │   └── events/
+│   │   │       └── analyticsEvents.ts
+│   │   │
+│   │   ├── monitoring/
+│   │   │   ├── ErrorBoundary.tsx
+│   │   │   ├── CrashReporting.ts
+│   │   │   └── PerformanceMonitoring.ts
+│   │   │
+│   │   ├── storage/
+│   │   │   ├── SecureStorage.ts
+│   │   │   ├── AsyncStorage.ts
+│   │   │   └── DatabaseService.ts
+│   │   │
+│   │   └── notifications/
+│   │       ├── NotificationService.ts
+│   │       ├── handlers/
+│   │       └── types/
+│   │
+│   ├── design-system/                # Design system
+│   │   ├── theme/
+│   │   │   ├── colors/
+│   │   │   │   ├── palette.ts
+│   │   │   │   ├── customer.colors.ts
+│   │   │   │   └── merchant.colors.ts
+│   │   │   ├── typography/
+│   │   │   │   └── typography.ts
+│   │   │   ├── spacing/
+│   │   │   │   └── spacing.ts
+│   │   │   └── themes/
+│   │   │       ├── customerTheme.ts
+│   │   │       └── merchantTheme.ts
+│   │   │
+│   │   ├── components/               # Design system components
+│   │   │   ├── primitives/
+│   │   │   │   ├── Box/
+│   │   │   │   ├── Text/
+│   │   │   │   └── Flex/
+│   │   │   └── patterns/
+│   │   │       ├── Forms/
+│   │   │       └── Lists/
+│   │   │
+│   │   └── assets/
+│   │       ├── icons/
+│   │       ├── images/
+│   │       └── animations/
+│   │
+│   └── types/                        # Global TypeScript types
+│       ├── models/
+│       │   ├── user.types.ts
+│       │   ├── product.types.ts
+│       │   └── order.types.ts
+│       ├── api/
+│       └── common/
+│
+├── scripts/                          # Build and utility scripts
+│   ├── generate-module.js
+│   ├── feature-flag-sync.js
+│   └── env-setup.js
+│
+├── __tests__/
+│   ├── unit/
+│   ├── integration/
+│   └── e2e/
+│
+├── .env.development
+├── .env.staging
+├── .env.production
+├── package.json
+├── tsconfig.json
+├── babel.config.js
+├── metro.config.js
+└── README.md
 ```
 
 ## Anti-Patterns
