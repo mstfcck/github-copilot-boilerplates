@@ -127,8 +127,8 @@ Use specific instruction files for focused development tasks:
 Leverage the prompt files for complex scenarios:
 
 ```markdown
-@project-initialization Set up a new Spring Boot project with PostgreSQL and Redis
-@api-design Create RESTful endpoints for user management
+/project-initialization Set up a new Spring Boot project with PostgreSQL and Redis
+/api-design Create RESTful endpoints for user management
 ```
 
 ## Customization Guidelines

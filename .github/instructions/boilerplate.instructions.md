@@ -61,6 +61,21 @@ All boilerplates **MUST** follow this exact directory structure:
 └── LICENSE                                   # OPTIONAL: License file if different from root
 ```
 
+### **REQUIRED** Instructions 
+
+#### Boilerplate Instructions
+
+- **MUST** follow these boilerplate instructions exactly.
+- **MUST** create boilerplate files and directories as specified, nothing else.
+- **MUST NOT** implement any kind of code based on the instructions or prompts. This is a project for creating boilerplates, not for writing code.
+
+#### Implementation Levels
+
+**MUST** follow these implementation levels:
+- **Basic**: Minimal functionality, suitable for proof-of-concept, mock implementations
+- **Advanced**: Complete feature set, ready for production
+- **Production-Ready**: Fully tested, optimized for performance and security
+
 ### **REQUIRED** File Content Standards
 
 #### Main Instruction File (`copilot-instructions.md`)
