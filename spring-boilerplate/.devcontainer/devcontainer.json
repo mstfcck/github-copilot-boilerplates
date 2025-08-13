@@ -1,0 +1,86 @@
+{
+    "name": "Spring Boot DevContainer",
+    "dockerComposeFile": [
+        "docker-compose.yml"
+    ],
+    "service": "app",
+    "workspaceFolder": "/workspaces",
+    "features": {
+        "ghcr.io/devcontainers/features/java:1": {
+            "version": "17",
+            "installMaven": true
+        },
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "lts",
+            "nodeGypDependencies": true
+        },
+        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+        "ghcr.io/devcontainers/features/git:1": {},
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "username": "vscode",
+            "uid": "1000",
+            "gid": "1000"
+        }
+    },
+    "remoteUser": "vscode",
+    "updateRemoteUserUID": true,
+    "hostRequirements": {
+        "cpus": 2,
+        "memory": "4gb"
+    },
+    "overrideCommand": false,
+    "onCreateCommand": "bash -lc 'bash ./.devcontainer/scripts/on-create.sh'",
+    "postCreateCommand": "bash -lc 'bash ./.devcontainer/scripts/post-create.sh'",
+    "postStartCommand": "bash -lc 'bash ./.devcontainer/scripts/post-start.sh'",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "vscjava.vscode-java-pack",
+                "vscjava.vscode-spring-initializr",
+                "vscjava.vscode-spring-boot-dashboard",
+                "vmware.vscode-spring-boot",
+                "redhat.vscode-xml",
+                "humao.rest-client",
+                "github.vscode-github-actions",
+                "eamodio.gitlens",
+                "streetsidesoftware.code-spell-checker"
+            ],
+            "settings": {
+                "java.compile.nullAnalysis.mode": "automatic",
+                "java.test.config": {
+                    "workingDirectory": "${workspaceFolder}",
+                    "vmArgs": [
+                        "-Dspring.profiles.active=dev"
+                    ]
+                },
+                "maven.terminal.useJavaHome": true,
+                "files.watcherExclude": {
+                    "**/target/**": true
+                }
+            }
+        }
+    },
+    "forwardPorts": [
+        8080,
+        5432,
+        6379
+    ],
+    "portsAttributes": {
+        "8080": {
+            "label": "Spring Boot"
+        },
+        "5432": {
+            "label": "PostgreSQL"
+        },
+        "6379": {
+            "label": "Redis"
+        }
+    },
+    "containerEnv": {
+        "JAVA_TOOL_OPTIONS": "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC",
+        "MAVEN_OPTS": "-Dmaven.repo.local=/home/vscode/.m2/repository"
+    },
+    "mounts": [
+        "source=${localEnv:HOME}/.m2,target=/home/vscode/.m2,type=bind,consistency=cached"
+    ]
+}
