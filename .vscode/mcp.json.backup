@@ -30,6 +30,12 @@
             "env": {
                 "MEMORY_FILE_PATH": "${input:memory_file_path}"
             },
+        },
+        "playwright": {
+            "command": "npx",
+            "args": [
+                "@playwright/mcp@latest"
+            ]
         }
     },
     "inputs": [
