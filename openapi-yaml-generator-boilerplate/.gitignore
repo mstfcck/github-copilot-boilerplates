@@ -1,0 +1,193 @@
+# OpenAPI YAML Generator Project .gitignore
+# Generated for OpenAPI specification development
+
+# ==============================================
+# Generated Files and Build Artifacts
+# ==============================================
+
+# OpenAPI code generation output
+generated/
+sdk/
+clients/
+docs/generated/
+
+# Build outputs
+dist/
+build/
+out/
+target/
+
+# ==============================================
+# Development Environment
+# ==============================================
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# ==============================================
+# Dependencies and Packages
+# ==============================================
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.yarn/
+.npm
+
+# Python
+.venv/
+venv/
+.env
+__pycache__/
+*.pyc
+*.pyo
+.Python
+*.egg-info/
+
+# Java
+.gradle/
+target/
+*.jar
+*.war
+*.ear
+.m2/
+.gradletasknamecache
+
+# Go
+vendor/
+go.sum
+
+# Ruby
+.bundle/
+vendor/bundle/
+.ruby-version
+
+# ==============================================
+# Configuration and Secrets
+# ==============================================
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.template
+.envrc
+
+# API keys and credentials
+api-keys.json
+credentials.json
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+service-account.json
+
+# Local configuration
+config/local.*
+config/production.*
+application-local.properties
+application-production.properties
+
+# ==============================================
+# Temporary and Runtime Files
+# ==============================================
+
+# Logs
+*.log
+logs/
+log/
+
+# Cache
+.cache/
+cache/
+.tmp/
+tmp/
+temp/
+
+# Test output
+coverage/
+test-results/
+.coverage
+.pytest_cache/
+.tox/
+htmlcov/
+junit.xml
+
+# Runtime files
+*.pid
+*.lock
+
+# ==============================================
+# Tool-Specific Files
+# ==============================================
+
+# OpenAPI generators
+.swagger-codegen/
+.swagger-codegen-ignore
+.openapi-generator/
+.openapi-generator-ignore
+
+# Documentation generators
+redoc-static.html
+swagger-ui/
+redoc-ui/
+api-docs/
+
+# Linting and validation
+.spectral-cache/
+spectral-results.json
+spectral-results.html
+
+# Postman collections (if auto-generated)
+postman/generated/
+collections/generated/
+
+# Mock server data
+mock-data/
+mocks/generated/
+wiremock/mappings/generated/
+
+# ==============================================
+# CI/CD and Deployment
+# ==============================================
+
+# CI/CD artifacts
+.github/workflows/generated/
+.travis.yml.generated
+.circleci/generated/
+
+# Deployment artifacts
+deploy/
+deployment/generated/
+k8s/generated/
+terraform/.terraform/
+terraform/terraform.tfstate*
+terraform/.terraform.lock.hcl
+
+# Container images
+*.tar
+docker-images/
+charts/generated/
+helm/generated/
+
+# ==============================================
+# Project-Specific Exclusions
+# ==============================================
+
+# Add project-specific patterns here if needed
