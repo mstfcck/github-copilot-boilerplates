@@ -12,23 +12,23 @@ This document provides the exact template structure that **MUST** be followed wh
 
 ```text
 {technology-name}-boilerplate/
-├── .github/                                    # REQUIRED: GitHub and AI configurations
+├── .github/                                   # REQUIRED: GitHub and AI configurations
 │   ├── copilot-instructions.md                # REQUIRED: Main AI development guidance
-│   ├── instructions/                          # REQUIRED: Modular instruction files
-│   │   ├── architecture.instructions.md       # REQUIRED: Architecture decisions and patterns
-│   │   ├── security.instructions.md           # REQUIRED: Security implementation guidelines
-│   │   ├── testing.instructions.md            # REQUIRED: Testing strategies and approaches
-│   │   ├── gitignore.instructions.md          # REQUIRED: Version control best practices
-│   │   ├── coding-standards.instructions.md   # RECOMMENDED: Code quality standards
-│   │   ├── performance.instructions.md        # RECOMMENDED: Performance optimization
-│   │   ├── configuration.instructions.md      # RECOMMENDED: Environment configuration
-│   │   ├── deployment.instructions.md         # RECOMMENDED: Deployment strategies
+│   ├── instructions/                          # OPTIONAL: Modular instruction files
+│   │   ├── architecture.instructions.md       # OPTIONAL: Architecture decisions and patterns
+│   │   ├── security.instructions.md           # OPTIONAL: Security implementation guidelines
+│   │   ├── testing.instructions.md            # OPTIONAL: Testing strategies and approaches
+│   │   ├── gitignore.instructions.md          # OPTIONAL: Version control best practices
+│   │   ├── coding-standards.instructions.md   # OPTIONAL: Code quality standards
+│   │   ├── performance.instructions.md        # OPTIONAL: Performance optimization
+│   │   ├── configuration.instructions.md      # OPTIONAL: Environment configuration
+│   │   ├── deployment.instructions.md         # OPTIONAL: Deployment strategies
 │   │   └── {domain-specific}.instructions.md  # OPTIONAL: Technology-specific guides
-│   ├── prompts/                               # RECOMMENDED: Ready-to-use AI prompts
-│   │   ├── project-initialization.prompt.md   # RECOMMENDED: Project setup guidance
-│   │   ├── feature-development.prompt.md      # RECOMMENDED: Feature implementation
-│   │   ├── api-design.prompt.md               # RECOMMENDED: API design assistance
-│   │   ├── troubleshooting.prompt.md          # RECOMMENDED: Problem-solving guidance
+│   ├── prompts/                               # OPTIONAL: Ready-to-use AI prompts
+│   │   ├── project-initialization.prompt.md   # OPTIONAL: Project setup guidance
+│   │   ├── feature-development.prompt.md      # OPTIONAL: Feature implementation
+│   │   ├── api-design.prompt.md               # OPTIONAL: API design assistance
+│   │   ├── troubleshooting.prompt.md          # OPTIONAL: Problem-solving guidance
 │   │   └── {scenario-specific}.prompt.md      # OPTIONAL: Specialized scenarios
 │   └── workflows/                             # OPTIONAL: GitHub Actions workflows
 │       ├── ci.yml                             # OPTIONAL: Continuous integration

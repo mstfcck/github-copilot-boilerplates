@@ -90,6 +90,11 @@ Each boilerplate follows a consistent instruction structure:
 ```text
 .github/
 ├── copilot-instructions.md          # Main AI instructions
+├── chatmodes/                       # Chat mode specific instructions
+│   ├── Software Architecture.chatmode.md
+│   ├── Software Testing.chatmode.md
+│   ├── Software Security.chatmode.md
+│   ├── Code Review.chatmode.md
 ├── instructions/                    # Specialized instruction files
 │   ├── architecture.instructions.md
 │   ├── security.instructions.md
@@ -102,6 +107,7 @@ Each boilerplate follows a consistent instruction structure:
 
 ### Instruction Types
 
+- **Chat Modes (.chatmode.md)**: Custom interaction modes for AI assistance
 - **Instructions (.instructions.md)**: Comprehensive guidelines for specific development areas
 - **Prompts (.prompt.md)**: Ready-to-use prompts for common development scenarios
 - **Documentation**: Reference materials and specifications
@@ -132,6 +138,13 @@ Leverage the prompt files for complex scenarios:
 ```
 
 ## Customization Guidelines
+
+### Adding New Chat Modes
+
+1. Create instruction files in `.github/chatmodes/`
+2. Follow the established naming convention: `{topic}.chatmode.md`
+3. Include clear MUST, SHOULD, and NICE TO HAVE sections
+4. Reference from main copilot-instructions.md
 
 ### Adding New Instructions
 
